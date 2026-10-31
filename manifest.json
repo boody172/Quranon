@@ -1,0 +1,11 @@
+{
+  "name": "قرآنون — القرآن الكريم",
+  "short_name": "قرآنون",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./#/home",
+  "display": "standalone",
+  "background_color": "#07130f",
+  "theme_color": "#07130f",
+  "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
