@@ -1,6 +1,6 @@
 // Service worker: يحفظ واجهة التطبيق للعمل بدون إنترنت، ويخزّن نصوص السور بعد أول قراءة
-const SHELL = 'qn-shell-v2', DATA = 'qn-data-v1';
-const FILES = ['./', 'index.html', 'css/style.css', 'js/data.js', 'js/art.js', 'js/app.js', 'icons/icon.svg', 'manifest.json'];
+const SHELL = 'qn-shell-v3', DATA = 'qn-data-v1';
+const FILES = ['./', 'index.html', 'css/style.css', 'js/data.js', 'js/art.js', 'js/qibla.js', 'js/app.js', 'icons/icon.svg', 'manifest.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => ![SHELL, DATA].includes(k)).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {

@@ -16,6 +16,7 @@ const ICON = {
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
   star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
 };
+const ARROW = '<svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = s => String(s || '').replace(/[ً-ْٰـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, '');
 const arNum = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
@@ -61,16 +62,6 @@ function reciterLabel(r) {
   return [c ? c.flag + ' ' + c.name : '', r.late ? 'رحمه الله' : '', r.moshaf.length === 2 ? 'تلاوتان' : r.moshaf.length > 2 ? arNum(r.moshaf.length) + ' تلاوات' : ''].filter(Boolean).join(' · ');
 }
 
-const FEATURES = [
-  { t: 'استمع', d: 'كل القراء بكل الروايات', href: '#/listen', ic: 'headset', c: '#e9c46a' },
-  { t: 'المصحف', d: 'اقرأ بالرسم العثماني', href: '#/mushaf', ic: 'book', c: '#2fbf8f' },
-  { t: 'الإذاعات', d: 'بث مباشر ٢٤ ساعة', href: '#/radio', ic: 'radio', c: '#ef8f6c' },
-  { t: 'دروس', d: 'علماء من كل دولة', href: '#/lessons', ic: 'cap', c: '#7ea6f6' },
-  { t: 'القبلة', d: 'بوصلة دقيقة', href: '#/qibla', ic: 'compass', c: '#b98cf0' },
-  { t: 'المفضلة', d: 'قراؤك المفضلون', href: '#/listen/fav', ic: 'heart', c: '#f07ca0' },
-  { t: 'سورة الكهف', d: 'سنة يوم الجمعة', href: '#/surah/18', ic: 'star', c: '#e9c46a' },
-  { t: 'بحث', d: 'سورة أو قارئ', href: '#/search', ic: 'search', c: '#5fd0d8' },
-];
 
 /* ================== المشغل ================== */
 const audio = $('#audio');
@@ -194,13 +185,17 @@ async function viewHome() {
       ${lastItem ? `<button class="row" id="resume"><div class="disc">${ICON.headset}</div><div class="meta"><b>${esc(lastItem.title)}</b><small>تابع الاستماع · ${esc(lastItem.sub)}</small></div>${ICON.play}</button>` : ''}
       ${lastRead ? `<a class="row" href="#/surah/${lastRead.s}/${lastRead.a || 1}"><div class="disc">${ICON.book}</div><div class="meta"><b>سورة ${SURAHS[lastRead.s - 1].name}</b><small>تابع القراءة · الآية ${arNum(lastRead.a || 1)}</small></div></a>` : ''}
     </div>` : ''}
-    <div class="fcards" id="features">${MAIN_FEATURES.map((f, i) => `<a class="fcard" href="${f.href}" style="--d:${i * 70}ms"><div class="fart">${ART[f.art]}</div><div class="ftext"><b>${f.t}</b><span>${f.d}</span></div><span class="go"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></a>`).join('')}</div>
-    <div class="minis">${MINI_FEATURES.map(f => `<a class="mini" href="${f.href}"><span>${ICON[f.ic]}</span>${f.t}</a>`).join('')}</div>
+    <div class="fcards" id="features">
+      <div class="fcard qcard" id="qcard" role="button" tabindex="0" style="--d:0ms"><div class="fart">${Qibla.svg()}</div>
+        <div class="ftext"><b>القبلة</b><span id="qcardHint">اضغط لتفعيل البوصلة</span></div><a class="go" href="#/qibla" aria-label="صفحة القبلة">${ARROW}</a></div>
+      ${MAIN_FEATURES.map((f, i) => `<a class="fcard" href="${f.href}" style="--d:${(i + 1) * 70}ms"><div class="fart">${ART[f.art]}</div><div class="ftext"><b>${f.t}</b><span>${f.d}</span></div><span class="go">${ARROW}</span></a>`).join('')}
+    </div>
     <div class="hero" id="dailyAyah" style="margin-top:22px"><small class="tag gold">آية اليوم</small><div class="ayah-text">…</div><small class="muted"></small></div>
     <div class="section"><h2>أعلام التلاوة</h2><a href="#/listen">الكل</a></div>
     <div class="hscroll" id="featured">${'<div class="rcard"><div class="skeleton" style="height:150px"></div></div>'.repeat(4)}</div>
     <div class="section"><h2>سور مختارة</h2><a href="#/mushaf">المصحف</a></div>
     <div class="chips">${[1, 36, 55, 56, 67, 112, 113, 114].map(n => `<a class="chip" href="#/surah/${n}">${SURAHS[n - 1].name}</a>`).join('')}</div>`;
+  setupQiblaCard();
   if (lastItem) $('#resume').onclick = () => { P.load(last.q, last.i); const pos = store.get('lastPos', 0); audio.addEventListener('loadedmetadata', () => { if (pos < audio.duration - 3) audio.currentTime = pos; }, { once: true }); };
   // آية اليوم: ثابتة طوال اليوم
   const day = Math.floor(Date.now() / 864e5), n = (day * 7919) % 6236 + 1;
@@ -212,6 +207,17 @@ async function viewHome() {
     const feat = FEATURED_KEYS.map(k => list.find(r => r.key.includes(k))).filter(Boolean);
     $('#featured') && ($('#featured').innerHTML = feat.map(rcard).join(''));
   }).catch(() => { $('#featured') && ($('#featured').innerHTML = '<p class="muted">تعذّر تحميل القراء</p>'); });
+}
+function setupQiblaCard() {
+  const card = $('#qcard'); let started = false;
+  const go = async () => {
+    if (started) return; started = true; store.set('qiblaOn', true);
+    const stop = await Qibla.start(st => { $('#qcardHint').textContent = Qibla.hint(st); Qibla.render(card, st); });
+    if (document.contains(card)) cleanup = stop; else stop(); // المستخدم خرج قبل ما يبدأ
+  };
+  card.addEventListener('click', e => { if (!e.target.closest('.go')) go(); });
+  // يشتغل تلقائياً لو المستخدم فعّله قبل كده (أندرويد)، أما iOS فيحتاج لمسة كل مرة
+  if (store.get('qiblaOn') && Qibla.canAutoStart()) go();
 }
 const rcard = r => `<a class="rcard" href="#/reciter/${r.id}"><div class="card"><div class="avatar">${esc(initials(r.name))}</div><b>${esc(r.name)}</b><small class="muted">${r.late ? 'رحمه الله' : (countryOf(r.country)?.name || '')}</small></div></a>`;
 const rrow = r => `<a class="row" href="#/reciter/${r.id}"><div class="avatar">${esc(initials(r.name))}</div><div class="meta"><b>${esc(r.name)}</b><small>${esc(reciterLabel(r) || arNum(r.moshaf.length) + ' مصحف')}</small></div>${favs.has(String(r.id)) ? '<span class="tag gold">♥</span>' : ''}</a>`;
@@ -352,71 +358,28 @@ async function viewLessons() {
 }
 
 /* ================== القبلة ================== */
-function qiblaBearing(lat, lng) {
-  const r = Math.PI / 180, φ1 = lat * r, φ2 = KAABA.lat * r, Δλ = (KAABA.lng - lng) * r;
-  const y = Math.sin(Δλ), x = Math.cos(φ1) * Math.tan(φ2) - Math.sin(φ1) * Math.cos(Δλ);
-  return (Math.atan2(y, x) / r + 360) % 360;
-}
-function distanceKm(lat, lng) {
-  const r = Math.PI / 180, dφ = (KAABA.lat - lat) * r, dλ = (KAABA.lng - lng) * r;
-  const a = Math.sin(dφ / 2) ** 2 + Math.cos(lat * r) * Math.cos(KAABA.lat * r) * Math.sin(dλ / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 async function viewQibla() {
-  const R = 'min(36vw,144px)';
   view.innerHTML = `
-    <p class="muted" style="text-align:center;margin:4px 0 0" id="qhint">ضع الهاتف بشكل مسطّح ثم اضغط «ابدأ»</p>
-    <div class="compass-wrap"><div class="compass" id="compass"><div class="fixed-mark"></div>
-      <div class="dial" id="dial"><div class="tick"></div>
-        ${[['ش', 0, 'n'], ['شر', 90], ['ج', 180], ['غ', 270]].map(([l, d, c]) => `<span class="${c || ''}" style="transform:translate(-50%,-50%) rotate(${d}deg) translateY(calc(-1 * ${R})) rotate(${-d}deg)">${l}</span>`).join('')}
-        <div class="needle" id="needle"><i></i><div class="kaaba">🕋</div></div>
-      </div><div class="center-dot"></div></div></div>
-    <div class="card stats"><div><b id="qDeg">—</b><small>زاوية القبلة</small></div><div><b id="qHead">—</b><small>اتجاه الهاتف</small></div><div><b id="qDist">—</b><small>كم إلى مكة</small></div></div>
-    <div class="actions" style="justify-content:center;margin-top:16px"><button class="btn" id="qStart">${ICON.compass} ابدأ تحديد القبلة</button></div>
-    <p class="muted" style="font-size:13px;text-align:center">إذا كانت البوصلة غير دقيقة، حرّك الهاتف على شكل رقم 8 لمعايرتها، وابتعد عن المعادن والمغناطيس.</p>`;
-  let bearing = null, onOri = null, wasAligned = false;
-  const update = heading => {
-    $('#dial').style.transform = `rotate(${-heading}deg)`;
-    $('#qHead').textContent = arNum(Math.round(heading)) + '°';
-    if (bearing == null) return;
-    const diff = Math.abs(((bearing - heading + 540) % 360) - 180);
-    const ok = diff < 5; $('#compass').classList.toggle('aligned', ok);
-    $('#qhint').textContent = ok ? '✅ أنت متجه نحو القبلة' : 'حرّك الهاتف حتى تصل الكعبة لأعلى الدائرة';
-    if (ok && !wasAligned && navigator.vibrate) navigator.vibrate(80); wasAligned = ok;
-  };
-  const start = async () => {
-    $('#qhint').textContent = 'جارٍ تحديد موقعك…';
-    try {
-      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000 }));
-      const { latitude: la, longitude: lo } = pos.coords;
-      bearing = qiblaBearing(la, lo); store.set('loc', { la, lo });
-    } catch {
-      const l = store.get('loc'); if (!l) { $('#qhint').textContent = 'يلزم السماح بالوصول للموقع لتحديد القبلة'; return; }
-      bearing = qiblaBearing(l.la, l.lo); toast('تم استخدام آخر موقع معروف');
-    }
-    const l = store.get('loc');
-    $('#needle').style.transform = `rotate(${bearing}deg)`;
-    $('#qDeg').textContent = arNum(Math.round(bearing)) + '°';
-    $('#qDist').textContent = arNum(Math.round(distanceKm(l.la, l.lo)).toLocaleString('en'));
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      let ok = false; try { ok = await DeviceOrientationEvent.requestPermission() === 'granted'; } catch { }
-      if (!ok) toast('اسمح بمستشعر الحركة لتعمل البوصلة');
-    }
-    let got = false;
-    onOri = e => {
-      let h = null;
-      if (typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;
-      else if (e.absolute && e.alpha != null) h = (360 - e.alpha) % 360;
-      else if (e.type === 'deviceorientationabsolute' && e.alpha != null) h = (360 - e.alpha) % 360;
-      if (h == null) return; got = true;
-      const so = (screen.orientation?.angle || 0); update((h + so) % 360);
-    };
-    addEventListener('deviceorientationabsolute', onOri); addEventListener('deviceorientation', onOri);
+    <div class="qpage" id="qroot">
+      <p class="qhint" id="qhint">ضع الهاتف مسطّحاً ثم اضغط «ابدأ»</p>
+      <div class="qbig">${Qibla.svg()}</div>
+      <div class="card stats"><div><b id="qDeg">—</b><small>زاوية القبلة</small></div><div><b id="qHead">—</b><small>اتجاه الهاتف</small></div><div><b id="qDist">—</b><small>كم إلى مكة</small></div></div>
+      <div class="actions" style="justify-content:center;margin-top:16px"><button class="pill primary" id="qStart" style="flex:none">${ICON.compass} ابدأ تحديد القبلة</button></div>
+      <p class="muted" style="font-size:13px;text-align:center">لو البوصلة مش دقيقة حرّك الموبايل على شكل رقم ٨، وابعد عن المعادن والمغناطيس.</p>
+    </div>`;
+  const root = $('#qroot');
+  const go = async () => {
     $('#qStart').hidden = true;
-    setTimeout(() => { if (!got) { update(0); $('#qhint').textContent = `جهازك لا يدعم البوصلة — القبلة بزاوية ${arNum(Math.round(bearing))}° من الشمال`; } }, 2500);
+    const stop = await Qibla.start(st => {
+      if (!document.contains(root)) return;
+      $('#qhint').textContent = Qibla.hint(st); Qibla.render(root, st);
+      if (st.bearing != null) { $('#qDeg').textContent = arNum(Math.round(st.bearing)) + '°'; $('#qDist').textContent = arNum(Math.round(st.dist).toLocaleString('en')); }
+      if (st.heading != null) $('#qHead').textContent = arNum(Math.round(st.heading)) + '°';
+    });
+    if (document.contains(root)) cleanup = stop; else stop();
   };
-  $('#qStart').onclick = start;
-  cleanup = () => { if (onOri) { removeEventListener('deviceorientationabsolute', onOri); removeEventListener('deviceorientation', onOri); } };
+  $('#qStart').onclick = go;
+  if (store.get('qiblaOn') && Qibla.canAutoStart()) go();
 }
 
 /* ================== بحث شامل ================== */

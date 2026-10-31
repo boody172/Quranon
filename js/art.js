@@ -11,16 +11,19 @@ const ART = {
   qibla: `<svg viewBox="0 0 200 140"><circle cx="100" cy="72" r="60" opacity=".35"/><circle cx="100" cy="72" r="44" stroke-dasharray="3 7"/>
     <path d="M82 66l18-8 18 8v24l-18 8-18-8z"/><path d="M82 66l18 8 18-8M100 74v24"/><path d="M84 76l16 7 16-7" opacity=".7"/><path class="arrow" d="M100 4v18M92 14l8-10 8 10"/></svg>`,
 };
+ART.fav = `<svg viewBox="0 0 200 140"><path d="M100 128S38 92 30 56a34 34 0 0 1 70-16 34 34 0 0 1 70 16c-8 36-70 72-70 72z"/>
+  <path d="M100 108S60 84 54 62a20 20 0 0 1 46-12 20 20 0 0 1 46 12c-6 22-46 46-46 46z" opacity=".45"/><path class="w1" d="M160 18v14M153 25h14M38 104v10M33 109h10"/></svg>`;
+ART.kahf = `<svg viewBox="0 0 200 140"><path d="M20 132c10-60 40-104 80-104s70 44 80 104"/><path d="M62 132c4-34 18-58 38-58s34 24 38 58" opacity=".7"/>
+  <path d="M10 132h180"/><path d="M146 22a14 14 0 1 0 12 20 11 11 0 1 1-12-20z"/><path class="w1" d="M54 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path class="w2" d="M128 54l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/></svg>`;
+ART.search = `<svg viewBox="0 0 200 140"><path d="M26 30h70M26 46h56M26 62h64M26 78h40M26 94h52" opacity=".45"/><circle cx="122" cy="62" r="38"/><path d="M150 90l32 32"/>
+  <path class="w1" d="M106 50a20 20 0 0 1 22-6"/></svg>`;
+// القبلة أولاً (كارت تفاعلي في الرئيسية)، ثم باقي المميزات — كل ميزة بعرض الشاشة
 const MAIN_FEATURES = [
   { t: 'استمع', d: 'كل القرّاء بكل الروايات', href: '#/listen', art: 'listen' },
   { t: 'المصحف', d: 'اقرأ وتدبّر', href: '#/mushaf', art: 'mushaf' },
   { t: 'الإذاعات', d: 'بث مباشر ٢٤ ساعة', href: '#/radio', art: 'radio' },
   { t: 'دروس', d: 'وتفسير من كل دولة', href: '#/lessons', art: 'lessons' },
-  { t: 'القبلة', d: 'بوصلة دقيقة', href: '#/qibla', art: 'qibla' },
-];
-const MINI_FEATURES = [
-  { t: 'المفضلة', href: '#/listen/fav', ic: 'heart' },
-  { t: 'سورة الكهف', href: '#/surah/18', ic: 'star' },
-  { t: 'بحث', href: '#/search', ic: 'search' },
-  { t: 'قصار السور', href: '#/surah/112', ic: 'book' },
+  { t: 'المفضلة', d: 'قرّاؤك المفضلون', href: '#/listen/fav', art: 'fav' },
+  { t: 'سورة الكهف', d: 'نور ما بين الجمعتين', href: '#/surah/18', art: 'kahf' },
+  { t: 'بحث', d: 'عن سورة أو قارئ', href: '#/search', art: 'search' },
 ];
