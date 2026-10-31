@@ -1,6 +1,6 @@
 // Service worker: app shell works offline; Quran text is cached after first read;
 // catalogue APIs use stale-while-revalidate. Audio is streamed, never cached here.
-const VERSION = 'v7';
+const VERSION = 'v8';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [
@@ -17,14 +17,26 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== SHELL && k !== DATA).map((k) => caches.delete(k)))));
-  self.clients.claim();
+  e.waitUntil((async () => {
+    const stale = (await caches.keys()).filter((k) => k !== SHELL && k !== DATA);
+    await Promise.all(stale.map((k) => caches.delete(k)));
+    await self.clients.claim();
+    // Pages opened by an older release reload so they pick up the new files right away.
+    if (stale.length) {
+      for (const client of await self.clients.matchAll({ type: 'window' })) client.navigate(client.url);
+    }
+  })());
 });
 
 const cacheFirst = (req, name) => caches.match(req).then((hit) => hit || fetch(req).then((res) => {
   if (res.ok) { const copy = res.clone(); caches.open(name).then((c) => c.put(req, copy)); }
   return res;
 }));
+
+// App files: always the newest from the network; the cache is only an offline fallback.
+const networkFirst = (req, name) => fetch(req, { cache: 'no-cache' })
+  .then((res) => { if (res.ok) { const copy = res.clone(); caches.open(name).then((c) => c.put(req, copy)); } return res; })
+  .catch(() => caches.match(req).then((hit) => hit || caches.match('index.html')));
 
 const staleWhileRevalidate = (req, name) => caches.open(name).then((cache) => cache.match(req).then((hit) => {
   const network = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; });
@@ -37,7 +49,7 @@ self.addEventListener('fetch', (e) => {
   // Never touch audio/video (Safari sends them through the worker as range requests) or non-GET calls.
   if (req.method !== 'GET' || req.destination === 'audio' || req.destination === 'video' || req.headers.has('range')) return;
 
-  if (url.origin === location.origin) e.respondWith(staleWhileRevalidate(req, SHELL));
+  if (url.origin === location.origin) e.respondWith(networkFirst(req, SHELL));
   else if (url.host === 'api.alquran.cloud') e.respondWith(cacheFirst(req, DATA));
   else if (url.host === 'mp3quran.net' && url.pathname.startsWith('/api/')) e.respondWith(staleWhileRevalidate(req, DATA));
 });
