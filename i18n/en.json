@@ -156,5 +156,7 @@
   "plus.cta": "Get Plus",
   "plus.thanks": "Thank you for your support",
   "plus.failed": "The payment wasn't completed. You can try again.",
-  "plus.home": "Back to home"
+  "plus.home": "Back to home",
+  "qibla.touchToStart": "Touch the screen once to start the compass",
+  "qibla.waiting": "The arrow points to the qibla from north — move your phone"
 }

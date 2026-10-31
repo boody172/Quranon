@@ -25,7 +25,7 @@ function featureCard(f, i) {
   if (f.art === 'qibla') {
     return `<div class="fcard qcard" id="qcard" role="button" tabindex="0" style="${style}">
       <div class="fart">${Qibla.svg()}</div>
-      <div class="ftext"><b>${title}</b><span id="qcardHint">${t('qibla.tapToStart')}</span></div>
+      <div class="ftext"><b>${title}</b><span id="qcardHint">${t('qibla.locating')}</span></div>
       <a class="go" href="#/qibla" aria-label="${t('qibla.page')}">${ICON.arrow}</a></div>`;
   }
   const media = /^https:\/\//.test(f.image || '')
@@ -39,23 +39,16 @@ function featureCard(f, i) {
     <span class="go">${ICON.arrow}</span></a>`;
 }
 
-function startQiblaCard(onCleanup) {
+// The compass starts as soon as the home screen opens; on iPhone the first touch anywhere unlocks it.
+async function startQiblaCard(onCleanup) {
   const card = $('#qcard');
   if (!card) return;
-  let started = false;
-  const start = async () => {
-    if (started) return;
-    started = true;
-    store.set('qiblaOn', true);
-    const stop = await Qibla.start((st) => {
-      $('#qcardHint').textContent = Qibla.hint(st);
-      Qibla.render(card, st);
-    });
-    document.contains(card) ? onCleanup(stop) : stop();
-  };
-  card.addEventListener('click', (e) => { if (!e.target.closest('.go')) start(); });
-  card.addEventListener('keydown', (e) => { if (e.key === 'Enter') start(); });
-  if (store.get('qiblaOn') && Qibla.canAutoStart()) start();
+  card.addEventListener('click', (e) => { if (!e.target.closest('.go')) Qibla.unlockMotion(); });
+  const stop = await Qibla.start((st) => {
+    $('#qcardHint').textContent = Qibla.hint(st);
+    Qibla.render(card, st);
+  });
+  document.contains(card) ? onCleanup(stop) : stop();
 }
 
 function showVerseOfTheDay() {

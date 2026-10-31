@@ -15,10 +15,9 @@ export const Qibla = (() => {
     const a = Math.sin(dφ / 2) ** 2 + Math.cos(lat * rad) * Math.cos(KAABA.lat * rad) * Math.sin(dλ / 2) ** 2;
     return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
-  const needsIOSPermission = () => typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
-  // iOS requires a user gesture before the motion sensor can be read.
-  const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const canAutoStart = () => !isIOS();
+  // Only iOS Safari gates the compass behind a gesture (some desktop browsers expose the API without needing it).
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const needsIOSPermission = () => isIOS && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
   const haptic = p => { try { navigator.vibrate && navigator.vibrate(p); } catch { } };
 
   async function locate() {
@@ -29,15 +28,32 @@ export const Qibla = (() => {
   }
 
   // Starts the compass; calls cb({ state, heading, bearing, diff, locked, dist }). Returns a stop function.
+  // ---- motion permission (iOS) ----
+  // Safari only exposes the compass after a user gesture. Instead of a dedicated button,
+  // the first touch anywhere in the app grants it; other platforms need nothing.
+  let motionReady = !needsIOSPermission();
+  const waiting = new Set();
+  function unlockMotion() {
+    if (motionReady) return;
+    DeviceOrientationEvent.requestPermission()
+      .then((result) => { motionReady = result === 'granted'; if (motionReady) waiting.forEach((fn) => fn()); })
+      .catch(() => {});
+  }
+  if (!motionReady) {
+    const once = () => { unlockMotion(); ['touchend', 'click'].forEach((t) => removeEventListener(t, once, true)); };
+    ['touchend', 'click'].forEach((t) => addEventListener(t, once, true));
+  }
+
   async function start(cb) {
-    let stopped = false, onOri, raf, got = false;
-    if (needsIOSPermission()) { try { await DeviceOrientationEvent.requestPermission(); } catch { } } // must run before any other await on iOS
+    let stopped = false, onOri, raf, got = false, sensorTimer;
     cb({ state: 'locating' });
     const loc = await locate();
     if (stopped) return () => { };
     if (!loc) { cb({ state: 'no-location' }); return () => { }; }
     const bearing = bearingTo(loc.la, loc.lo), dist = distanceKm(loc.la, loc.lo);
     let s = null, c = null, locked = false, shown = null;
+    // Show the direction straight away (north-up) while the live compass spins up.
+    cb({ state: motionReady ? 'static' : 'needs-touch', heading: 0, bearing, diff: bearing, locked: false, dist });
     onOri = e => {
       let h = null;
       if (typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;
@@ -64,8 +80,11 @@ export const Qibla = (() => {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    setTimeout(() => { if (!got && !stopped) cb({ state: 'no-sensor', heading: 0, bearing, diff: bearing, locked: false, dist }); }, 2500);
-    return () => { stopped = true; cancelAnimationFrame(raf); removeEventListener('deviceorientationabsolute', onOri); removeEventListener('deviceorientation', onOri); };
+    const armSensorCheck = () => {
+      sensorTimer = setTimeout(() => { if (!got && !stopped) cb({ state: 'no-sensor', heading: 0, bearing, diff: bearing, locked: false, dist }); }, 2500);
+    };
+    if (motionReady) armSensorCheck(); else waiting.add(armSensorCheck);
+    return () => { stopped = true; clearTimeout(sensorTimer); waiting.delete(armSensorCheck); cancelAnimationFrame(raf); removeEventListener('deviceorientationabsolute', onOri); removeEventListener('deviceorientation', onOri); };
   }
 
   // Live compass drawing (home card and qibla page).
@@ -89,9 +108,11 @@ export const Qibla = (() => {
   const hint = (st) => {
     if (st.state === 'locating') return t('qibla.locating');
     if (st.state === 'no-location') return t('qibla.noLocation');
+    if (st.state === 'needs-touch') return t('qibla.touchToStart');
+    if (st.state === 'static') return t('qibla.waiting');
     if (st.state === 'no-sensor') return t('qibla.noSensor', { deg: Math.round(st.bearing || 0) });
     if (st.locked) return t('qibla.aligned');
     return t(st.diff > 0 ? 'qibla.turnRight' : 'qibla.turnLeft', { deg: Math.round(Math.abs(st.diff)) });
   };
-  return { start, svg, render, hint, canAutoStart };
+  return { start, svg, render, hint, unlockMotion };
 })();

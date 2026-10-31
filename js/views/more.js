@@ -182,7 +182,7 @@ export async function accountView(view) {
 export function qiblaView(view, { onCleanup }) {
   view.innerHTML = `
     <div class="qpage" id="qroot">
-      <p class="qhint" id="qhint">${t('qibla.pageHint')}</p>
+      <p class="qhint" id="qhint">${t('qibla.locating')}</p>
       <div class="qbig">${Qibla.svg()}</div>
       <div class="stats">
         <div><b id="qDeg">—</b><small>${t('qibla.angle')}</small></div>
@@ -193,20 +193,16 @@ export function qiblaView(view, { onCleanup }) {
       <p class="muted small">${t('qibla.calibrate')}</p>
     </div>`;
   const root = $('#qroot');
-  const start = async () => {
-    $('#qStart').hidden = true;
-    const stop = await Qibla.start((st) => {
-      if (!document.contains(root)) return;
-      $('#qhint').textContent = Qibla.hint(st);
-      Qibla.render(root, st);
-      if (st.bearing != null) {
-        $('#qDeg').textContent = num(Math.round(st.bearing)) + '°';
-        $('#qDist').textContent = num(Math.round(st.dist));
-      }
-      if (st.heading != null) $('#qHead').textContent = num(Math.round(st.heading)) + '°';
-    });
-    document.contains(root) ? onCleanup(stop) : stop();
-  };
-  $('#qStart').onclick = start;
-  if (store.get('qiblaOn') && Qibla.canAutoStart()) start();
+  $('#qStart').hidden = true;
+  root.addEventListener('click', () => Qibla.unlockMotion());
+  Qibla.start((st) => {
+    if (!document.contains(root)) return;
+    $('#qhint').textContent = Qibla.hint(st);
+    Qibla.render(root, st);
+    if (st.bearing != null) {
+      $('#qDeg').textContent = num(Math.round(st.bearing)) + '°';
+      $('#qDist').textContent = num(Math.round(st.dist));
+    }
+    if (st.heading != null && st.state === 'live') $('#qHead').textContent = num(Math.round(st.heading)) + '°';
+  }).then((stop) => (document.contains(root) ? onCleanup(stop) : stop()));
 }
