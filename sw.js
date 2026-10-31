@@ -1,6 +1,6 @@
 // Service worker: app shell works offline; Quran text is cached after first read;
 // catalogue APIs use stale-while-revalidate. Audio is streamed, never cached here.
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [
@@ -34,7 +34,8 @@ const staleWhileRevalidate = (req, name) => caches.open(name).then((cache) => ca
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
-  if (req.method !== 'GET' || url.pathname.endsWith('.mp3')) return;
+  // Never touch audio/video (Safari sends them through the worker as range requests) or non-GET calls.
+  if (req.method !== 'GET' || req.destination === 'audio' || req.destination === 'video' || req.headers.has('range')) return;
 
   if (url.origin === location.origin) e.respondWith(staleWhileRevalidate(req, SHELL));
   else if (url.host === 'api.alquran.cloud') e.respondWith(cacheFirst(req, DATA));

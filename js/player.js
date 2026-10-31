@@ -28,7 +28,11 @@ export const player = {
     const item = current();
     if (!item) return;
     audio.src = item.url;
-    audio.play().catch(() => toast(t('player.cantPlay')));
+    audio.load(); // iOS: start a fresh load for the new source inside the tap
+    audio.play().catch((err) => {
+      // AbortError just means another tap replaced this track.
+      if (err?.name !== 'AbortError') toast(`${t('player.cantPlay')} (${err?.name || 'Error'})`);
+    });
     if (!item.live) store.set('last', { queue, index });
     $('#miniPlayer').hidden = false;
     render();
@@ -128,7 +132,14 @@ function cycleRepeat() {
 audio.addEventListener('play', render);
 audio.addEventListener('pause', render);
 audio.addEventListener('ended', () => player.next(true));
-audio.addEventListener('error', () => { if (audio.getAttribute('src')) toast(t('player.cantLoad')); });
+audio.addEventListener('error', () => {
+  if (audio.getAttribute('src')) toast(`${t('player.cantLoad')} (${audio.error?.code ?? '?'})`);
+});
+
+// iOS 17+: treat this as media playback so the silent switch doesn't mute recitations.
+if (navigator.audioSession) {
+  try { navigator.audioSession.type = 'playback'; } catch { /* unsupported */ }
+}
 audio.addEventListener('timeupdate', () => {
   const progress = audio.duration ? audio.currentTime / audio.duration : 0;
   $('#miniBar').style.transform = `scaleX(${progress})`;
