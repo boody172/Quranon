@@ -5,63 +5,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4faf8">
   <meta name="description" content="قرآنون — استمع للقرآن الكريم بأصوات كل القراء، اقرأ المصحف، دروس قرآنية، واتجاه القبلة.">
-  <title>قرآنون</title>
+  <title>Quranon</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Readex+Pro:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="mask-icon" href="icons/logo.svg" color="#0f766e">
+  <link rel="preload" href="fonts/plex-ar-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/alexandria-ar-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://mp3quran.net" crossorigin>
+  <link rel="preconnect" href="https://api.alquran.cloud" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="modulepreload" href="js/util.js">
+  <link rel="modulepreload" href="js/api.js">
+  <link rel="modulepreload" href="js/views/home.js">
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
 
-  <!-- شريط علوي بسيط: رجوع + العنوان + الرئيسية (فقط داخل الأقسام) -->
+  <!-- Top bar: back + title + one contextual button (home inside sections, account on the home screen). -->
   <header class="topbar">
-    <button class="icon-btn" id="backBtn" aria-label="رجوع" hidden><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-    <div class="brand"><img src="icons/icon.svg" alt=""><span id="pageTitle">قرآنون</span></div>
-    <a class="icon-btn" id="homeBtn" href="#/home" aria-label="الرئيسية" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></a>
+    <button class="icon-btn" id="backBtn" aria-label="Back" data-i18n-label="nav.back" hidden><svg viewBox="0 0 24 24"><path class="flip" d="M9 6l6 6-6 6"/></svg></button>
+    <a class="brand" href="#/home" id="brand" aria-label="Quranon">
+      <img src="icons/logo.svg" alt="" width="34" height="34">
+      <span id="pageTitle"></span>
+    </a>
+    <button class="icon-btn lang-btn" id="langBtn" aria-label="Language" data-i18n-label="nav.language"></button>
+    <a class="icon-btn" id="accountBtn" href="#/account" aria-label="Account" data-i18n-label="nav.account" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></a>
   </header>
 
-  <main id="view" class="view" tabindex="-1"></main>
+  <div class="lang-menu" id="langMenu" hidden></div>
+  <div class="update-banner" id="updateBanner" role="status" hidden><div><b></b><span></span></div><button class="pill soft"></button></div>
 
-  <!-- المشغل المصغر -->
+  <main id="view" class="view enter" tabindex="-1"></main>
+
+  <!-- Mini player -->
   <div class="mini-player" id="miniPlayer" hidden>
     <button class="mini-info" id="miniOpen">
       <div class="disc"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
       <div class="mini-text"><b id="miniTitle"></b><small id="miniSub"></small></div>
     </button>
-    <button class="icon-btn play" id="miniPlay" aria-label="تشغيل/إيقاف"></button>
+    <button class="icon-btn play" id="miniPlay" data-i18n-label="player.playPause"></button>
     <div class="mini-progress"><i id="miniBar"></i></div>
   </div>
 
-  <!-- المشغل الكامل -->
+  <!-- Full player sheet -->
   <section class="sheet" id="playerSheet" aria-hidden="true">
     <div class="sheet-inner">
-      <button class="grabber" id="sheetClose" aria-label="إغلاق"></button>
+      <button class="grabber" id="sheetClose" data-i18n-label="common.close"></button>
       <div class="art"><span id="artSurah"></span></div>
       <h2 id="pTitle"></h2>
       <p class="muted" id="pSub"></p>
-      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="الموضع">
+      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Seek">
       <div class="times"><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
       <div class="controls">
-        <button class="icon-btn" id="pRepeat" aria-label="تكرار"></button>
-        <button class="icon-btn lg" id="pPrev" aria-label="السابق"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 5l-9 7 9 7z"/></svg></button>
-        <button class="icon-btn xl play" id="pPlay" aria-label="تشغيل/إيقاف"></button>
-        <button class="icon-btn lg" id="pNext" aria-label="التالي"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 5l9 7-9 7z"/></svg></button>
-        <button class="icon-btn" id="pSleep" aria-label="مؤقت النوم"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+        <button class="icon-btn" id="pRepeat" data-i18n-label="player.repeat"></button>
+        <button class="icon-btn lg" id="pPrev" data-i18n-label="player.prev"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 5l-9 7 9 7z"/></svg></button>
+        <button class="icon-btn xl play" id="pPlay" data-i18n-label="player.playPause"></button>
+        <button class="icon-btn lg" id="pNext" data-i18n-label="player.next"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 5l9 7-9 7z"/></svg></button>
+        <button class="icon-btn" id="pSleep" data-i18n-label="player.sleep"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
       </div>
-      <div class="sheet-actions"><button class="pill soft" id="pRead">📖 اقرأ السورة</button></div>
+      <div class="sheet-actions"><button class="pill soft" id="pRead" data-i18n-text="player.read"></button></div>
     </div>
   </section>
 
   <div class="toast" id="toast" role="status"></div>
   <audio id="audio" preload="metadata"></audio>
 
-  <script src="js/data.js"></script>
-  <script src="js/art.js"></script>
-  <script src="js/qibla.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

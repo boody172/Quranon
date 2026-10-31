@@ -1,0 +1,168 @@
+// Audio player: queue, mini bar, full sheet, lock-screen controls, sleep timer, resume.
+import { surahName } from './catalog.js';
+import { t } from './i18n.js';
+import { $, $$, formatTime, ICON, store, toast } from './util.js';
+
+const audio = $('#audio');
+const sheet = $('#playerSheet');
+const SLEEP_STEPS = [0, 15, 30, 60];
+
+const state = {
+  queue: [],
+  index: 0,
+  repeat: store.get('repeat', 'off'), // off | all | one
+  sleepMinutes: 0,
+  sleepTimer: null,
+  seeking: false,
+};
+
+const current = () => state.queue[state.index];
+
+export const player = {
+  get current() { return current(); },
+
+  /** item: { title, sub, url, surah?, live? } */
+  play(queue, index = 0) {
+    state.queue = queue;
+    state.index = index;
+    const item = current();
+    if (!item) return;
+    audio.src = item.url;
+    audio.play().catch(() => toast(t('player.cantPlay')));
+    if (!item.live) store.set('last', { queue, index });
+    $('#miniPlayer').hidden = false;
+    render();
+    mediaSession(item);
+    markPlaying();
+  },
+
+  resume() {
+    const last = store.get('last');
+    if (!last?.queue?.[last.index]) return;
+    const position = store.get('lastPos', 0);
+    this.play(last.queue, last.index);
+    audio.addEventListener('loadedmetadata', () => {
+      if (position < audio.duration - 3) audio.currentTime = position;
+    }, { once: true });
+  },
+
+  toggle() {
+    if (current()) audio.paused ? audio.play().catch(() => {}) : audio.pause();
+  },
+  next(auto = false) {
+    if (!state.queue.length) return;
+    if (auto && state.repeat === 'one') { audio.currentTime = 0; audio.play(); return; }
+    if (state.index < state.queue.length - 1) this.play(state.queue, state.index + 1);
+    else if (state.repeat === 'all' || !auto) this.play(state.queue, 0);
+  },
+  prev() {
+    if (audio.currentTime > 5) { audio.currentTime = 0; return; }
+    this.play(state.queue, Math.max(0, state.index - 1));
+  },
+  closeSheet() {
+    sheet.classList.remove('open');
+    sheet.setAttribute('aria-hidden', 'true');
+  },
+};
+
+/** Highlights the row of whatever is playing on the current screen. */
+export function markPlaying() {
+  const url = current()?.url;
+  $$('[data-play]').forEach((el) => el.classList.toggle('playing', el.dataset.play === url));
+}
+
+function render() {
+  const item = current();
+  if (!item) return;
+  $('#miniTitle').textContent = $('#pTitle').textContent = item.title;
+  $('#miniSub').textContent = $('#pSub').textContent = item.sub;
+  $('#artSurah').textContent = item.surah ? surahName(item.surah) : item.live ? t('player.live') : '';
+  $('#pRead').hidden = !item.surah;
+  $('#seek').disabled = Boolean(item.live);
+  $('#miniPlay').innerHTML = $('#pPlay').innerHTML = audio.paused ? ICON.play : ICON.pause;
+  $('#pRepeat').innerHTML = ICON.repeat + (state.repeat === 'one' ? '<b class="badge">1</b>' : '');
+  $('#pRepeat').classList.toggle('on', state.repeat !== 'off');
+}
+
+function mediaSession(item) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: item.title, artist: item.sub, album: 'Quranon',
+    artwork: [{ src: 'icons/icon.svg', sizes: '512x512', type: 'image/svg+xml' }],
+  });
+  const handlers = {
+    play: () => audio.play(), pause: () => audio.pause(),
+    previoustrack: () => player.prev(), nexttrack: () => player.next(),
+  };
+  for (const [action, fn] of Object.entries(handlers)) {
+    try { navigator.mediaSession.setActionHandler(action, fn); } catch { /* unsupported action */ }
+  }
+}
+
+function openSheet() {
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+}
+
+function cycleSleepTimer() {
+  state.sleepMinutes = SLEEP_STEPS[(SLEEP_STEPS.indexOf(state.sleepMinutes) + 1) % SLEEP_STEPS.length];
+  clearTimeout(state.sleepTimer);
+  $('#pSleep').classList.toggle('on', state.sleepMinutes > 0);
+  if (!state.sleepMinutes) return toast(t('player.sleepOff'));
+  state.sleepTimer = setTimeout(() => {
+    audio.pause();
+    state.sleepMinutes = 0;
+    $('#pSleep').classList.remove('on');
+  }, state.sleepMinutes * 6e4);
+  toast(t('player.sleepIn', { n: state.sleepMinutes }));
+}
+
+function cycleRepeat() {
+  state.repeat = { off: 'all', all: 'one', one: 'off' }[state.repeat];
+  store.set('repeat', state.repeat);
+  render();
+  toast(t({ off: 'player.repeatOff', all: 'player.repeatAll', one: 'player.repeatOne' }[state.repeat]));
+}
+
+// --- wiring ---
+audio.addEventListener('play', render);
+audio.addEventListener('pause', render);
+audio.addEventListener('ended', () => player.next(true));
+audio.addEventListener('error', () => { if (audio.getAttribute('src')) toast(t('player.cantLoad')); });
+audio.addEventListener('timeupdate', () => {
+  const progress = audio.duration ? audio.currentTime / audio.duration : 0;
+  $('#miniBar').style.transform = `scaleX(${progress})`;
+  if (!state.seeking) $('#seek').value = progress * 1000;
+  $('#tCur').textContent = formatTime(audio.currentTime);
+  $('#tDur').textContent = current()?.live ? t('player.liveShort') : formatTime(audio.duration);
+  if (current() && !current().live && Math.floor(audio.currentTime) % 5 === 0) store.set('lastPos', audio.currentTime);
+});
+
+$('#seek').addEventListener('input', (e) => {
+  state.seeking = true;
+  if (audio.duration) $('#tCur').textContent = formatTime((e.target.value / 1000) * audio.duration);
+});
+$('#seek').addEventListener('change', (e) => {
+  state.seeking = false;
+  if (audio.duration) audio.currentTime = (e.target.value / 1000) * audio.duration;
+});
+
+$('#miniPlay').onclick = $('#pPlay').onclick = () => player.toggle();
+$('#pNext').onclick = () => player.next();
+$('#pPrev').onclick = () => player.prev();
+$('#pRepeat').onclick = cycleRepeat;
+$('#pSleep').onclick = cycleSleepTimer;
+$('#pRead').onclick = () => { player.closeSheet(); location.hash = '#/surah/' + current().surah; };
+$('#miniOpen').onclick = openSheet;
+$('#sheetClose').onclick = () => player.closeSheet();
+sheet.addEventListener('click', (e) => { if (e.target === sheet) player.closeSheet(); });
+
+// Restore the last track (paused) so "continue" is one tap away.
+const last = store.get('last');
+if (last?.queue?.[last.index]) {
+  state.queue = last.queue;
+  state.index = last.index;
+  audio.src = current().url;
+  $('#miniPlayer').hidden = false;
+  render();
+}

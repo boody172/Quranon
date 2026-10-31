@@ -1,18 +1,13 @@
-// بيانات ثابتة: السور + تصنيف القراء حسب الدولة + العلماء والدروس
-const SURAHS = `الفاتحة,7,M|البقرة,286,D|آل عمران,200,D|النساء,176,D|المائدة,120,D|الأنعام,165,M|الأعراف,206,M|الأنفال,75,D|التوبة,129,D|يونس,109,M|هود,123,M|يوسف,111,M|الرعد,43,D|إبراهيم,52,M|الحجر,99,M|النحل,128,M|الإسراء,111,M|الكهف,110,M|مريم,98,M|طه,135,M|الأنبياء,112,M|الحج,78,D|المؤمنون,118,M|النور,64,D|الفرقان,77,M|الشعراء,227,M|النمل,93,M|القصص,88,M|العنكبوت,69,M|الروم,60,M|لقمان,34,M|السجدة,30,M|الأحزاب,73,D|سبأ,54,M|فاطر,45,M|يس,83,M|الصافات,182,M|ص,88,M|الزمر,75,M|غافر,85,M|فصلت,54,M|الشورى,53,M|الزخرف,89,M|الدخان,59,M|الجاثية,37,M|الأحقاف,35,M|محمد,38,D|الفتح,29,D|الحجرات,18,D|ق,45,M|الذاريات,60,M|الطور,49,M|النجم,62,M|القمر,55,M|الرحمن,78,D|الواقعة,96,M|الحديد,29,D|المجادلة,22,D|الحشر,24,D|الممتحنة,13,D|الصف,14,D|الجمعة,11,D|المنافقون,11,D|التغابن,18,D|الطلاق,12,D|التحريم,12,D|الملك,30,M|القلم,52,M|الحاقة,52,M|المعارج,44,M|نوح,28,M|الجن,28,M|المزمل,20,M|المدثر,56,M|القيامة,40,M|الإنسان,31,D|المرسلات,50,M|النبأ,40,M|النازعات,46,M|عبس,42,M|التكوير,29,M|الانفطار,19,M|المطففين,36,M|الانشقاق,25,M|البروج,22,M|الطارق,17,M|الأعلى,19,M|الغاشية,26,M|الفجر,30,M|البلد,20,M|الشمس,15,M|الليل,21,M|الضحى,11,M|الشرح,8,M|التين,8,M|العلق,19,M|القدر,5,M|البينة,8,D|الزلزلة,8,D|العاديات,11,M|القارعة,11,M|التكاثر,8,M|العصر,3,M|الهمزة,9,M|الفيل,5,M|قريش,4,M|الماعون,7,M|الكوثر,3,M|الكافرون,6,M|النصر,3,D|المسد,5,M|الإخلاص,4,M|الفلق,5,M|الناس,6,M`
-  .split('|').map((s, i) => { const [name, ayahs, t] = s.split(','); return { n: i + 1, name, ayahs: +ayahs, type: t === 'M' ? 'مكية' : 'مدنية' }; });
+// Static reference data shipped with the app (works offline and before the API answers).
+const SURAH_EN = "Al-Fatihah|Al-Baqarah|Al-Imran|An-Nisa|Al-Ma'idah|Al-An'am|Al-A'raf|Al-Anfal|At-Tawbah|Yunus|Hud|Yusuf|Ar-Ra'd|Ibrahim|Al-Hijr|An-Nahl|Al-Isra|Al-Kahf|Maryam|Taha|Al-Anbiya|Al-Hajj|Al-Mu'minun|An-Nur|Al-Furqan|Ash-Shu'ara|An-Naml|Al-Qasas|Al-Ankabut|Ar-Rum|Luqman|As-Sajdah|Al-Ahzab|Saba|Fatir|Ya-Sin|As-Saffat|Sad|Az-Zumar|Ghafir|Fussilat|Ash-Shura|Az-Zukhruf|Ad-Dukhan|Al-Jathiyah|Al-Ahqaf|Muhammad|Al-Fath|Al-Hujurat|Qaf|Adh-Dhariyat|At-Tur|An-Najm|Al-Qamar|Ar-Rahman|Al-Waqi'ah|Al-Hadid|Al-Mujadilah|Al-Hashr|Al-Mumtahanah|As-Saff|Al-Jumu'ah|Al-Munafiqun|At-Taghabun|At-Talaq|At-Tahrim|Al-Mulk|Al-Qalam|Al-Haqqah|Al-Ma'arij|Nuh|Al-Jinn|Al-Muzzammil|Al-Muddaththir|Al-Qiyamah|Al-Insan|Al-Mursalat|An-Naba|An-Nazi'at|Abasa|At-Takwir|Al-Infitar|Al-Mutaffifin|Al-Inshiqaq|Al-Buruj|At-Tariq|Al-A'la|Al-Ghashiyah|Al-Fajr|Al-Balad|Ash-Shams|Al-Layl|Ad-Duha|Ash-Sharh|At-Tin|Al-Alaq|Al-Qadr|Al-Bayyinah|Az-Zalzalah|Al-Adiyat|Al-Qari'ah|At-Takathur|Al-Asr|Al-Humazah|Al-Fil|Quraysh|Al-Ma'un|Al-Kawthar|Al-Kafirun|An-Nasr|Al-Masad|Al-Ikhlas|Al-Falaq|An-Nas".split('|');
 
-const COUNTRIES = [
-  { id: 'eg', name: 'مصر', flag: '🇪🇬' },
-  { id: 'sa', name: 'السعودية', flag: '🇸🇦' },
-  { id: 'kw', name: 'الكويت', flag: '🇰🇼' },
-  { id: 'sd', name: 'السودان', flag: '🇸🇩' },
-  { id: 'ma', name: 'المغرب', flag: '🇲🇦' },
-  { id: 'ye', name: 'اليمن', flag: '🇾🇪' },
-];
+export const SURAHS = `الفاتحة,7,M|البقرة,286,D|آل عمران,200,D|النساء,176,D|المائدة,120,D|الأنعام,165,M|الأعراف,206,M|الأنفال,75,D|التوبة,129,D|يونس,109,M|هود,123,M|يوسف,111,M|الرعد,43,D|إبراهيم,52,M|الحجر,99,M|النحل,128,M|الإسراء,111,M|الكهف,110,M|مريم,98,M|طه,135,M|الأنبياء,112,M|الحج,78,D|المؤمنون,118,M|النور,64,D|الفرقان,77,M|الشعراء,227,M|النمل,93,M|القصص,88,M|العنكبوت,69,M|الروم,60,M|لقمان,34,M|السجدة,30,M|الأحزاب,73,D|سبأ,54,M|فاطر,45,M|يس,83,M|الصافات,182,M|ص,88,M|الزمر,75,M|غافر,85,M|فصلت,54,M|الشورى,53,M|الزخرف,89,M|الدخان,59,M|الجاثية,37,M|الأحقاف,35,M|محمد,38,D|الفتح,29,D|الحجرات,18,D|ق,45,M|الذاريات,60,M|الطور,49,M|النجم,62,M|القمر,55,M|الرحمن,78,D|الواقعة,96,M|الحديد,29,D|المجادلة,22,D|الحشر,24,D|الممتحنة,13,D|الصف,14,D|الجمعة,11,D|المنافقون,11,D|التغابن,18,D|الطلاق,12,D|التحريم,12,D|الملك,30,M|القلم,52,M|الحاقة,52,M|المعارج,44,M|نوح,28,M|الجن,28,M|المزمل,20,M|المدثر,56,M|القيامة,40,M|الإنسان,31,D|المرسلات,50,M|النبأ,40,M|النازعات,46,M|عبس,42,M|التكوير,29,M|الانفطار,19,M|المطففين,36,M|الانشقاق,25,M|البروج,22,M|الطارق,17,M|الأعلى,19,M|الغاشية,26,M|الفجر,30,M|البلد,20,M|الشمس,15,M|الليل,21,M|الضحى,11,M|الشرح,8,M|التين,8,M|العلق,19,M|القدر,5,M|البينة,8,D|الزلزلة,8,D|العاديات,11,M|القارعة,11,M|التكاثر,8,M|العصر,3,M|الهمزة,9,M|الفيل,5,M|قريش,4,M|الماعون,7,M|الكوثر,3,M|الكافرون,6,M|النصر,3,D|المسد,5,M|الإخلاص,4,M|الفلق,5,M|الناس,6,M`
+  .split('|').map((s, i) => { const [name, ayahs, type] = s.split(','); return { n: i + 1, name, ayahs: +ayahs, type, en: SURAH_EN[i] }; });
+
+export const COUNTRIES = ['eg', 'sa', 'kw', 'sd', 'ma', 'ye'];
 
 // كلمات مفتاحية (بعد التطبيع وحذف المسافات) → دولة، d = رحمه الله
-const RECITER_TAGS = [
+export const RECITER_TAGS = [
   // مصر
   ['المنشاوي', 'eg', 1], ['عبدالباسط', 'eg', 1], ['الحصري', 'eg', 1], ['مصطفياسماعيل', 'eg', 1],
   ['محمدرفعت', 'eg', 1], ['محمودعليالبنا', 'eg', 1], ['الطبلاوي', 'eg', 1], ['شعيشع', 'eg', 1],
@@ -37,23 +32,20 @@ const RECITER_TAGS = [
 ];
 
 // القراء المميزين في الصفحة الرئيسية (عمالقة دولة التلاوة)
-const FEATURED_KEYS = ['عبدالباسط', 'المنشاوي', 'الحصري', 'مصطفياسماعيل', 'محمدرفعت', 'البنا', 'السديس', 'المعيقلي', 'العفاسي', 'الدوسري'];
+export const FEATURED_KEYS = ['عبدالباسط', 'المنشاوي', 'الحصري', 'مصطفياسماعيل', 'محمدرفعت', 'البنا', 'السديس', 'المعيقلي', 'العفاسي', 'الدوسري'];
 
-// علماء ودروس حسب الدولة (روابط بحث يوتيوب)
-const SCHOLARS = [
-  { name: 'الشيخ محمد متولي الشعراوي', topic: 'خواطر حول القرآن الكريم', country: 'eg', d: 1 },
-  { name: 'الشيخ محمد حسان', topic: 'دروس ومحاضرات', country: 'eg' },
-  { name: 'د. عمر عبد الكافي', topic: 'دروس وسيرة', country: 'eg' },
-  { name: 'د. مصطفى حسني', topic: 'تزكية ومعاني الآيات', country: 'eg' },
-  { name: 'الشيخ حازم شومان', topic: 'دروس للشباب', country: 'eg' },
-  { name: 'الشيخ محمد بن صالح العثيمين', topic: 'تفسير وشروح', country: 'sa', d: 1 },
-  { name: 'الشيخ عبد العزيز بن باز', topic: 'فتاوى ودروس', country: 'sa', d: 1 },
-  { name: 'الشيخ صالح المغامسي', topic: 'تأملات قرآنية', country: 'sa' },
-  { name: 'الشيخ بدر المشاري', topic: 'مواعظ ودروس', country: 'sa' },
-  { name: 'الشيخ عثمان الخميس', topic: 'تفسير ودروس', country: 'kw' },
-  { name: 'الشيخ نبيل العوضي', topic: 'قصص ومواعظ', country: 'kw' },
-  { name: 'د. محمد راتب النابلسي', topic: 'تفسير وإعجاز', country: 'sy' },
+// Fallback scholars (the dashboard overrides these once the backend is connected).
+export const SCHOLARS = [
+  { ar: ['الشيخ محمد متولي الشعراوي', 'خواطر حول القرآن الكريم'], en: ['Sheikh Muhammad Metwally Al-Shaarawy', 'Reflections on the Quran'], country: 'eg', late: true },
+  { ar: ['الشيخ محمد حسان', 'دروس ومحاضرات'], en: ['Sheikh Muhammad Hassan', 'Lessons and lectures'], country: 'eg' },
+  { ar: ['د. عمر عبد الكافي', 'دروس في السيرة والتزكية'], en: ['Dr. Omar Abdelkafy', 'Seerah and self-purification'], country: 'eg' },
+  { ar: ['د. مصطفى حسني', 'معاني الآيات والتزكية'], en: ['Dr. Mustafa Hosny', 'Meanings of the verses'], country: 'eg' },
+  { ar: ['الشيخ محمد بن صالح العثيمين', 'تفسير وشروح'], en: ['Sheikh Muhammad ibn Salih Al-Uthaymeen', 'Tafsir and commentary'], country: 'sa', late: true },
+  { ar: ['الشيخ عبد العزيز بن باز', 'فتاوى ودروس'], en: ['Sheikh Abdulaziz ibn Baz', 'Fatwas and lessons'], country: 'sa', late: true },
+  { ar: ['الشيخ صالح المغامسي', 'تأملات قرآنية'], en: ['Sheikh Saleh Al-Maghamsi', 'Quranic reflections'], country: 'sa' },
+  { ar: ['الشيخ عثمان الخميس', 'تفسير ودروس'], en: ['Sheikh Othman Al-Khamees', 'Tafsir and lessons'], country: 'kw' },
+  { ar: ['د. محمد راتب النابلسي', 'تفسير وإعجاز'], en: ['Dr. Mohammed Rateb Al-Nabulsi', 'Tafsir and the miracles of the Quran'], country: 'sy' },
 ];
-const LESSON_COUNTRIES = [...COUNTRIES.slice(0, 3), { id: 'sy', name: 'سوريا', flag: '🇸🇾' }];
+export const LESSON_COUNTRIES = ['eg', 'sa', 'kw', 'sy'];
 
-const KAABA = { lat: 21.422487, lng: 39.826206 };
+export const KAABA = { lat: 21.422487, lng: 39.826206 };

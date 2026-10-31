@@ -1,5 +1,5 @@
-// رسومات كبيرة لكروت المميزات (خطوط نيون بنفس روح الريفرنس)
-const ART = {
+// Line illustrations for the home cards. Keys are referenced by the admin dashboard.
+export const ART = {
   listen: `<svg viewBox="0 0 200 140"><path d="M50 92V74a50 50 0 0 1 100 0v18"/><rect x="38" y="88" width="26" height="40" rx="10"/><rect x="136" y="88" width="26" height="40" rx="10"/>
     <g class="eq"><path d="M84 112v-14"/><path d="M94 112v-26"/><path d="M104 112v-36"/><path d="M114 112v-22"/><path d="M124 112v-12"/></g></svg>`,
   mushaf: `<svg viewBox="0 0 200 140"><path d="M100 44c-14-10-34-12-56-12v74c22 0 42 2 56 12 14-10 34-12 56-12V32c-22 0-42 2-56 12zM100 44v74"/>
@@ -17,13 +17,15 @@ ART.kahf = `<svg viewBox="0 0 200 140"><path d="M20 132c10-60 40-104 80-104s70 4
   <path d="M10 132h180"/><path d="M146 22a14 14 0 1 0 12 20 11 11 0 1 1-12-20z"/><path class="w1" d="M54 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path class="w2" d="M128 54l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/></svg>`;
 ART.search = `<svg viewBox="0 0 200 140"><path d="M26 30h70M26 46h56M26 62h64M26 78h40M26 94h52" opacity=".45"/><circle cx="122" cy="62" r="38"/><path d="M150 90l32 32"/>
   <path class="w1" d="M106 50a20 20 0 0 1 22-6"/></svg>`;
-// القبلة أولاً (كارت تفاعلي في الرئيسية)، ثم باقي المميزات — كل ميزة بعرض الشاشة
-const MAIN_FEATURES = [
-  { tint: '#dcebff', ink: '#2f6fe0', t: 'استمع', d: 'كل القرّاء بكل الروايات', href: '#/listen', art: 'listen' },
-  { tint: '#fcefd2', ink: '#b7791f', t: 'المصحف', d: 'اقرأ وتدبّر', href: '#/mushaf', art: 'mushaf' },
-  { tint: '#ffe4d8', ink: '#e0622f', t: 'الإذاعات', d: 'بث مباشر ٢٤ ساعة', href: '#/radio', art: 'radio' },
-  { tint: '#ebe4ff', ink: '#6d4fd8', t: 'دروس', d: 'وتفسير من كل دولة', href: '#/lessons', art: 'lessons' },
-  { tint: '#ffe1ea', ink: '#e0457b', t: 'المفضلة', d: 'قرّاؤك المفضلون', href: '#/listen/fav', art: 'fav' },
-  { tint: '#e1e7ff', ink: '#3b4fb8', t: 'سورة الكهف', d: 'نور ما بين الجمعتين', href: '#/surah/18', art: 'kahf' },
-  { tint: '#dcf5e6', ink: '#1f9d57', t: 'بحث', d: 'عن سورة أو قارئ', href: '#/search', art: 'search' },
+// Used when the backend is not reachable. Mirrors database/seeders/FeatureSeeder.php.
+const f = (slug, ar, en, link, art, tint, ink) => ({ slug, title: { ar: ar[0], en: en[0] }, subtitle: { ar: ar[1], en: en[1] }, link, art, tint, ink });
+export const DEFAULT_FEATURES = [
+  f('qibla', ['القبلة', 'حرّك الهاتف حتى يثبت السهم'], ['Qibla', 'Turn your phone until it locks'], '#/qibla', 'qibla', '#ddf3ee', '#0f766e'),
+  f('listen', ['استمع', 'أكثر من مئتي قارئ'], ['Listen', 'Over 200 reciters'], '#/listen', 'listen', '#e3edfb', '#2557b8'),
+  f('mushaf', ['المصحف', 'اقرأ بالرسم العثماني'], ['Mushaf', 'Read in the Uthmani script'], '#/mushaf', 'mushaf', '#f6ecd6', '#8c6118'),
+  f('radio', ['الإذاعات', 'بث مباشر طوال اليوم'], ['Radio', 'Live, all day long'], '#/radio', 'radio', '#fbe6dc', '#b4501f'),
+  f('lessons', ['دروس', 'تفسير وتدبّر من علماء موثوقين'], ['Lessons', 'Tafsir from trusted scholars'], '#/lessons', 'lessons', '#ebe6f8', '#5b45b0'),
+  f('saved', ['محفوظاتي', 'كل ما حفظته في مكان واحد'], ['Saved', 'Everything you saved, in one place'], '#/saved', 'fav', '#f9e3ea', '#b23a63'),
+  f('kahf', ['سورة الكهف', 'لقراءة يوم الجمعة'], ['Surah Al-Kahf', 'For Friday reading'], '#/surah/18', 'kahf', '#e4e8f7', '#34479c'),
+  f('search', ['بحث', 'عن سورة أو قارئ'], ['Search', 'Find a surah or reciter'], '#/search', 'search', '#e2f1e7', '#22744a'),
 ];
