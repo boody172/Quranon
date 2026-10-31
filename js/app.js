@@ -161,6 +161,7 @@ const TITLES = { home: 'قرآنون', listen: 'القرّاء', mushaf: 'الم
 const TAB_OF = { reciter: 'listen', surah: 'mushaf', radio: 'listen', search: '' };
 let cleanup = null;
 async function route() {
+  if (location.hash === '#features') { $('#features')?.scrollIntoView({ behavior: 'smooth' }); history.replaceState(null, '', '#/home'); return; }
   const [name = 'home', ...args] = location.hash.replace(/^#\/?/, '').split('/');
   const fn = routes[name] || viewHome;
   if (cleanup) { cleanup(); cleanup = null; }
@@ -184,18 +185,21 @@ async function viewHome() {
   const last = store.get('last'); const lastRead = store.get('lastRead');
   const lastItem = last?.q?.[last.i];
   view.innerHTML = `
-    <h1>${greeting()} 🌿</h1>
-    <p class="muted" style="margin:0 0 16px">«خيركم من تعلّم القرآن وعلّمه»</p>
-    <div class="hero" id="dailyAyah"><small class="tag gold">آية اليوم</small><div class="ayah-text">…</div><small class="muted"></small></div>
-    ${lastItem || lastRead ? `<div class="section"><h2>تابع من حيث توقفت</h2></div><div class="list">
-      ${lastItem ? `<button class="row" id="resume"><div class="disc">${ICON.headset}</div><div class="meta"><b>${esc(lastItem.title)}</b><small>${esc(lastItem.sub)}</small></div>${ICON.play}</button>` : ''}
-      ${lastRead ? `<a class="row" href="#/surah/${lastRead.s}"><div class="disc">${ICON.book}</div><div class="meta"><b>سورة ${SURAHS[lastRead.s - 1].name}</b><small>آخر قراءة · الآية ${arNum(lastRead.a || 1)}</small></div></a>` : ''}
+    <section class="brand-hero">
+      <p class="eyebrow">القرآن كله · في مكان واحد</p>
+      <h1>${greeting()}،<br><span class="grad">اسمع ما يطمئن قلبك</span></h1>
+      <div class="cta"><a class="pill primary" href="#/listen">ابدأ الاستماع <svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a><a class="pill" href="#features">كل المميزات</a></div>
+    </section>
+    ${lastItem || lastRead ? `<div class="list" style="margin-bottom:6px">
+      ${lastItem ? `<button class="row" id="resume"><div class="disc">${ICON.headset}</div><div class="meta"><b>${esc(lastItem.title)}</b><small>تابع الاستماع · ${esc(lastItem.sub)}</small></div>${ICON.play}</button>` : ''}
+      ${lastRead ? `<a class="row" href="#/surah/${lastRead.s}/${lastRead.a || 1}"><div class="disc">${ICON.book}</div><div class="meta"><b>سورة ${SURAHS[lastRead.s - 1].name}</b><small>تابع القراءة · الآية ${arNum(lastRead.a || 1)}</small></div></a>` : ''}
     </div>` : ''}
-    <div class="section"><h2>ماذا تريد اليوم؟</h2></div>
-    <div class="features">${FEATURES.map(f => `<a class="feature" href="${f.href}" style="--c:${f.c}"><span class="fic">${ICON[f.ic]}</span><b>${f.t}</b><small>${f.d}</small></a>`).join('')}</div>
+    <div class="fcards" id="features">${MAIN_FEATURES.map((f, i) => `<a class="fcard" href="${f.href}" style="--d:${i * 70}ms"><div class="fart">${ART[f.art]}</div><div class="ftext"><b>${f.t}</b><span>${f.d}</span></div><span class="go"><svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></span></a>`).join('')}</div>
+    <div class="minis">${MINI_FEATURES.map(f => `<a class="mini" href="${f.href}"><span>${ICON[f.ic]}</span>${f.t}</a>`).join('')}</div>
+    <div class="hero" id="dailyAyah" style="margin-top:22px"><small class="tag gold">آية اليوم</small><div class="ayah-text">…</div><small class="muted"></small></div>
     <div class="section"><h2>أعلام التلاوة</h2><a href="#/listen">الكل</a></div>
     <div class="hscroll" id="featured">${'<div class="rcard"><div class="skeleton" style="height:150px"></div></div>'.repeat(4)}</div>
-    <div class="section"><h2>قصار السور</h2><a href="#/mushaf">المصحف</a></div>
+    <div class="section"><h2>سور مختارة</h2><a href="#/mushaf">المصحف</a></div>
     <div class="chips">${[1, 36, 55, 56, 67, 112, 113, 114].map(n => `<a class="chip" href="#/surah/${n}">${SURAHS[n - 1].name}</a>`).join('')}</div>`;
   if (lastItem) $('#resume').onclick = () => { P.load(last.q, last.i); const pos = store.get('lastPos', 0); audio.addEventListener('loadedmetadata', () => { if (pos < audio.duration - 3) audio.currentTime = pos; }, { once: true }); };
   // آية اليوم: ثابتة طوال اليوم
