@@ -13,6 +13,7 @@ const ICON = {
   radio: '<svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8l10-5"/><circle cx="8" cy="14" r="2"/><path d="M14 13h4M14 16h4"/></svg>',
   cap: '<svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10v5c3 3 9 3 12 0v-5"/></svg>',
   compass: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
   star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
 };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -59,6 +60,17 @@ function reciterLabel(r) {
   const c = countryOf(r.country);
   return [c ? c.flag + ' ' + c.name : '', r.late ? 'رحمه الله' : '', r.moshaf.length === 2 ? 'تلاوتان' : r.moshaf.length > 2 ? arNum(r.moshaf.length) + ' تلاوات' : ''].filter(Boolean).join(' · ');
 }
+
+const FEATURES = [
+  { t: 'استمع', d: 'كل القراء بكل الروايات', href: '#/listen', ic: 'headset', c: '#e9c46a' },
+  { t: 'المصحف', d: 'اقرأ بالرسم العثماني', href: '#/mushaf', ic: 'book', c: '#2fbf8f' },
+  { t: 'الإذاعات', d: 'بث مباشر ٢٤ ساعة', href: '#/radio', ic: 'radio', c: '#ef8f6c' },
+  { t: 'دروس', d: 'علماء من كل دولة', href: '#/lessons', ic: 'cap', c: '#7ea6f6' },
+  { t: 'القبلة', d: 'بوصلة دقيقة', href: '#/qibla', ic: 'compass', c: '#b98cf0' },
+  { t: 'المفضلة', d: 'قراؤك المفضلون', href: '#/listen/fav', ic: 'heart', c: '#f07ca0' },
+  { t: 'سورة الكهف', d: 'سنة يوم الجمعة', href: '#/surah/18', ic: 'star', c: '#e9c46a' },
+  { t: 'بحث', d: 'سورة أو قارئ', href: '#/search', ic: 'search', c: '#5fd0d8' },
+];
 
 /* ================== المشغل ================== */
 const audio = $('#audio');
@@ -180,14 +192,7 @@ async function viewHome() {
       ${lastRead ? `<a class="row" href="#/surah/${lastRead.s}"><div class="disc">${ICON.book}</div><div class="meta"><b>سورة ${SURAHS[lastRead.s - 1].name}</b><small>آخر قراءة · الآية ${arNum(lastRead.a || 1)}</small></div></a>` : ''}
     </div>` : ''}
     <div class="section"><h2>ماذا تريد اليوم؟</h2></div>
-    <div class="grid quick">
-      <a href="#/listen"><span class="ic">${ICON.headset}</span>استمع</a>
-      <a href="#/mushaf"><span class="ic">${ICON.book}</span>اقرأ</a>
-      <a href="#/radio"><span class="ic">${ICON.radio}</span>إذاعات</a>
-      <a href="#/lessons"><span class="ic">${ICON.cap}</span>دروس</a>
-      <a href="#/qibla"><span class="ic">${ICON.compass}</span>القبلة</a>
-      <a href="#/surah/18"><span class="ic">${ICON.star}</span>الكهف</a>
-    </div>
+    <div class="features">${FEATURES.map(f => `<a class="feature" href="${f.href}" style="--c:${f.c}"><span class="fic">${ICON[f.ic]}</span><b>${f.t}</b><small>${f.d}</small></a>`).join('')}</div>
     <div class="section"><h2>أعلام التلاوة</h2><a href="#/listen">الكل</a></div>
     <div class="hscroll" id="featured">${'<div class="rcard"><div class="skeleton" style="height:150px"></div></div>'.repeat(4)}</div>
     <div class="section"><h2>قصار السور</h2><a href="#/mushaf">المصحف</a></div>
@@ -209,7 +214,8 @@ const rrow = r => `<a class="row" href="#/reciter/${r.id}"><div class="avatar">$
 
 /* ================== استمع ================== */
 let listenFilter = 'all', listenQuery = '';
-async function viewListen() {
+async function viewListen(f) {
+  if (f) listenFilter = f;
   view.innerHTML = `
     <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" placeholder="ابحث عن قارئ… (مثال: المنشاوي)" value="${esc(listenQuery)}"></div>
     <div class="chips" id="filters">
