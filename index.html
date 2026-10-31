@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0c0d">
+  <meta name="theme-color" content="#f4faf8">
   <meta name="description" content="قرآنون — استمع للقرآن الكريم بأصوات كل القراء، اقرأ المصحف، دروس قرآنية، واتجاه القبلة.">
   <title>قرآنون</title>
   <link rel="manifest" href="manifest.json">
@@ -17,14 +17,11 @@
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
 
+  <!-- شريط علوي بسيط: رجوع + العنوان + الرئيسية (فقط داخل الأقسام) -->
   <header class="topbar">
-    <button class="icon-btn" id="backBtn" aria-label="رجوع" hidden>
-      <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-    </button>
+    <button class="icon-btn" id="backBtn" aria-label="رجوع" hidden><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
     <div class="brand"><img src="icons/icon.svg" alt=""><span id="pageTitle">قرآنون</span></div>
-    <button class="icon-btn" id="searchBtn" aria-label="بحث">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-    </button>
+    <a class="icon-btn" id="homeBtn" href="#/home" aria-label="الرئيسية" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></a>
   </header>
 
   <main id="view" class="view" tabindex="-1"></main>
@@ -53,23 +50,11 @@
         <button class="icon-btn lg" id="pPrev" aria-label="السابق"><svg viewBox="0 0 24 24"><path d="M6 5v14M18 5l-9 7 9 7z"/></svg></button>
         <button class="icon-btn xl play" id="pPlay" aria-label="تشغيل/إيقاف"></button>
         <button class="icon-btn lg" id="pNext" aria-label="التالي"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 5l9 7-9 7z"/></svg></button>
-        <button class="icon-btn" id="pSpeed" aria-label="السرعة">1x</button>
+        <button class="icon-btn" id="pSleep" aria-label="مؤقت النوم"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
       </div>
-      <div class="sheet-actions">
-        <button class="chip" id="pSleep">⏾ مؤقت النوم</button>
-        <button class="chip" id="pRead">📖 اقرأ السورة</button>
-        <a class="chip" id="pDownload" download target="_blank" rel="noopener">⬇ تحميل</a>
-      </div>
+      <div class="sheet-actions"><button class="pill soft" id="pRead">📖 اقرأ السورة</button></div>
     </div>
   </section>
-
-  <nav class="tabbar" id="tabbar">
-    <a href="#/home" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>الرئيسية</span></a>
-    <a href="#/listen" data-tab="listen"><svg viewBox="0 0 24 24"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="2" y="14" width="5" height="7" rx="2"/><rect x="17" y="14" width="5" height="7" rx="2"/></svg><span>استمع</span></a>
-    <a href="#/mushaf" data-tab="mushaf"><svg viewBox="0 0 24 24"><path d="M12 6c-2-1.5-5-2-8-2v15c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v15"/></svg><span>المصحف</span></a>
-    <a href="#/lessons" data-tab="lessons"><svg viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10v5c3 3 9 3 12 0v-5"/></svg><span>دروس</span></a>
-    <a href="#/qibla" data-tab="qibla"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span>القبلة</span></a>
-  </nav>
 
   <div class="toast" id="toast" role="status"></div>
   <audio id="audio" preload="metadata"></audio>

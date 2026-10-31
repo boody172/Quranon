@@ -19,11 +19,11 @@ ART.search = `<svg viewBox="0 0 200 140"><path d="M26 30h70M26 46h56M26 62h64M26
   <path class="w1" d="M106 50a20 20 0 0 1 22-6"/></svg>`;
 // القبلة أولاً (كارت تفاعلي في الرئيسية)، ثم باقي المميزات — كل ميزة بعرض الشاشة
 const MAIN_FEATURES = [
-  { t: 'استمع', d: 'كل القرّاء بكل الروايات', href: '#/listen', art: 'listen' },
-  { t: 'المصحف', d: 'اقرأ وتدبّر', href: '#/mushaf', art: 'mushaf' },
-  { t: 'الإذاعات', d: 'بث مباشر ٢٤ ساعة', href: '#/radio', art: 'radio' },
-  { t: 'دروس', d: 'وتفسير من كل دولة', href: '#/lessons', art: 'lessons' },
-  { t: 'المفضلة', d: 'قرّاؤك المفضلون', href: '#/listen/fav', art: 'fav' },
-  { t: 'سورة الكهف', d: 'نور ما بين الجمعتين', href: '#/surah/18', art: 'kahf' },
-  { t: 'بحث', d: 'عن سورة أو قارئ', href: '#/search', art: 'search' },
+  { tint: '#dcebff', ink: '#2f6fe0', t: 'استمع', d: 'كل القرّاء بكل الروايات', href: '#/listen', art: 'listen' },
+  { tint: '#fcefd2', ink: '#b7791f', t: 'المصحف', d: 'اقرأ وتدبّر', href: '#/mushaf', art: 'mushaf' },
+  { tint: '#ffe4d8', ink: '#e0622f', t: 'الإذاعات', d: 'بث مباشر ٢٤ ساعة', href: '#/radio', art: 'radio' },
+  { tint: '#ebe4ff', ink: '#6d4fd8', t: 'دروس', d: 'وتفسير من كل دولة', href: '#/lessons', art: 'lessons' },
+  { tint: '#ffe1ea', ink: '#e0457b', t: 'المفضلة', d: 'قرّاؤك المفضلون', href: '#/listen/fav', art: 'fav' },
+  { tint: '#e1e7ff', ink: '#3b4fb8', t: 'سورة الكهف', d: 'نور ما بين الجمعتين', href: '#/surah/18', art: 'kahf' },
+  { tint: '#dcf5e6', ink: '#1f9d57', t: 'بحث', d: 'عن سورة أو قارئ', href: '#/search', art: 'search' },
 ];

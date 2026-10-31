@@ -91,7 +91,7 @@ const P = {
     $('#miniTitle').textContent = it.title; $('#miniSub').textContent = it.sub;
     $('#pTitle').textContent = it.title; $('#pSub').textContent = it.sub;
     $('#artSurah').textContent = it.surah ? SURAHS[it.surah - 1].name : (it.live ? 'بث مباشر' : '﴾ ﴿');
-    $('#pRead').hidden = !it.surah; $('#pDownload').hidden = !!it.live; $('#pDownload').href = it.url;
+    $('#pRead').hidden = !it.surah;
     $('#seek').disabled = !!it.live;
     const playing = !audio.paused;
     $('#miniPlay').innerHTML = $('#pPlay').innerHTML = playing ? ICON.pause : ICON.play;
@@ -124,12 +124,11 @@ $('#seek').addEventListener('change', e => { seeking = false; if (audio.duration
 $('#miniPlay').onclick = $('#pPlay').onclick = () => P.toggle();
 $('#pNext').onclick = () => P.next(); $('#pPrev').onclick = () => P.prev();
 $('#pRepeat').onclick = () => { P.repeat = { off: 'all', all: 'one', one: 'off' }[P.repeat]; store.set('repeat', P.repeat); P.ui(); toast({ off: 'بدون تكرار', all: 'تكرار القائمة', one: 'تكرار السورة' }[P.repeat]); };
-$('#pSpeed').onclick = () => { P.speedI = (P.speedI + 1) % P.speeds.length; const s = P.speeds[P.speedI]; if (!P.cur?.live) audio.playbackRate = s; $('#pSpeed').textContent = s + 'x'; };
 $('#pSleep').onclick = () => {
-  const opts = [0, 15, 30, 60]; const cur = opts.indexOf(P.sleepMin || 0); P.sleepMin = opts[(cur + 1) % opts.length];
-  clearTimeout(P.sleepT);
-  if (P.sleepMin) { P.sleepT = setTimeout(() => { audio.pause(); toast('تم إيقاف التلاوة — تصبح على خير'); P.sleepMin = 0; $('#pSleep').textContent = '⏾ مؤقت النوم'; }, P.sleepMin * 6e4); $('#pSleep').textContent = '⏾ بعد ' + arNum(P.sleepMin) + ' دقيقة'; toast('سيتوقف بعد ' + arNum(P.sleepMin) + ' دقيقة'); }
-  else { $('#pSleep').textContent = '⏾ مؤقت النوم'; toast('تم إلغاء المؤقت'); }
+  const opts = [0, 15, 30, 60]; P.sleepMin = opts[(opts.indexOf(P.sleepMin || 0) + 1) % opts.length];
+  clearTimeout(P.sleepT); $('#pSleep').classList.toggle('on', !!P.sleepMin);
+  if (P.sleepMin) { P.sleepT = setTimeout(() => { audio.pause(); toast('تم إيقاف التلاوة — تصبح على خير 🌙'); P.sleepMin = 0; $('#pSleep').classList.remove('on'); }, P.sleepMin * 6e4); toast('🌙 سيتوقف بعد ' + arNum(P.sleepMin) + ' دقيقة'); }
+  else toast('تم إلغاء مؤقت النوم');
 };
 $('#pRead').onclick = () => { closeSheet(); location.hash = '#/surah/' + P.cur.surah; };
 const sheet = $('#playerSheet');
@@ -148,26 +147,26 @@ const routes = {
   home: viewHome, listen: viewListen, reciter: viewReciter, mushaf: viewMushaf, surah: viewSurah,
   lessons: viewLessons, qibla: viewQibla, radio: viewRadio, search: viewSearch,
 };
-const TITLES = { home: 'قرآنون', listen: 'القرّاء', mushaf: 'المصحف الشريف', lessons: 'دروس قرآنية', qibla: 'اتجاه القبلة', radio: 'إذاعات القرآن', search: 'بحث' };
-const TAB_OF = { reciter: 'listen', surah: 'mushaf', radio: 'listen', search: '' };
-let cleanup = null;
+const TITLES = { home: 'قرآنون', listen: 'استمع', mushaf: 'المصحف', lessons: 'دروس', qibla: 'القبلة', radio: 'الإذاعات', search: 'بحث' };
+// الأب لكل صفحة: زر الرجوع يرجع خطوة واحدة واضحة
+const PARENT = { reciter: '#/listen', surah: '#/mushaf' };
+let cleanup = null, current = 'home', cameFromApp = false;
 async function route() {
-  if (location.hash === '#features') { $('#features')?.scrollIntoView({ behavior: 'smooth' }); history.replaceState(null, '', '#/home'); return; }
   const [name = 'home', ...args] = location.hash.replace(/^#\/?/, '').split('/');
   const fn = routes[name] || viewHome;
   if (cleanup) { cleanup(); cleanup = null; }
-  const tab = name in TAB_OF ? TAB_OF[name] : name;
-  document.querySelectorAll('.tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
-  $('#pageTitle').textContent = TITLES[name] || 'قرآنون';
-  $('#backBtn').hidden = !(name in TAB_OF);
+  closeSheet();
+  cameFromApp = cameFromApp || current !== name; current = routes[name] ? name : 'home';
+  $('#pageTitle').textContent = TITLES[current] || 'قرآنون';
+  $('#backBtn').hidden = current === 'home';
+  $('#homeBtn').hidden = !(current in PARENT); // زر الرئيسية فقط في الصفحات العميقة
   view.style.animation = 'none'; view.offsetHeight; view.style.animation = '';
   window.scrollTo(0, 0);
   try { await fn(...args); } catch (e) { console.error(e); view.innerHTML = errorBox(); }
 }
-const errorBox = () => `<div class="empty"><p>تعذّر الاتصال بالخادم 🌐</p><p class="muted">تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى</p><button class="btn" onclick="route()">إعادة المحاولة</button></div>`;
+const errorBox = () => `<div class="empty"><p style="font-size:40px;margin:0">🌿</p><p>تعذّر الاتصال بالإنترنت</p><p class="muted">تأكد من اتصالك ثم حاول مرة أخرى</p><button class="pill primary" onclick="route()">إعادة المحاولة</button></div>`;
 const skeletons = n => '<div class="list">' + '<div class="skeleton"></div>'.repeat(n) + '</div>';
-$('#backBtn').onclick = () => history.length > 1 ? history.back() : (location.hash = '#/home');
-$('#searchBtn').onclick = () => location.hash = '#/search';
+$('#backBtn').onclick = () => { if (cameFromApp && history.length > 1) history.back(); else location.hash = PARENT[current] || '#/home'; };
 addEventListener('hashchange', route);
 
 /* ================== الرئيسية ================== */
@@ -177,24 +176,16 @@ async function viewHome() {
   const lastItem = last?.q?.[last.i];
   view.innerHTML = `
     <section class="brand-hero">
-      <p class="eyebrow">القرآن كله · في مكان واحد</p>
-      <h1>${greeting()}،<br><span class="grad">اسمع ما يطمئن قلبك</span></h1>
-      <div class="cta"><a class="pill primary" href="#/listen">ابدأ الاستماع <svg viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a><a class="pill" href="#features">كل المميزات</a></div>
+      <p class="eyebrow">${greeting()} 🌿</p>
+      <h1>اسمع ما <span class="grad">يطمئن قلبك</span></h1>
     </section>
-    ${lastItem || lastRead ? `<div class="list" style="margin-bottom:6px">
-      ${lastItem ? `<button class="row" id="resume"><div class="disc">${ICON.headset}</div><div class="meta"><b>${esc(lastItem.title)}</b><small>تابع الاستماع · ${esc(lastItem.sub)}</small></div>${ICON.play}</button>` : ''}
-      ${lastRead ? `<a class="row" href="#/surah/${lastRead.s}/${lastRead.a || 1}"><div class="disc">${ICON.book}</div><div class="meta"><b>سورة ${SURAHS[lastRead.s - 1].name}</b><small>تابع القراءة · الآية ${arNum(lastRead.a || 1)}</small></div></a>` : ''}
-    </div>` : ''}
+    ${lastItem ? `<div class="list" style="margin-bottom:16px"><button class="row" id="resume"><div class="disc">${ICON.play}</div><div class="meta"><b>${esc(lastItem.title)}</b><small>كمّل الاستماع · ${esc(lastItem.sub)}</small></div></button></div>` : ''}
     <div class="fcards" id="features">
       <div class="fcard qcard" id="qcard" role="button" tabindex="0" style="--d:0ms"><div class="fart">${Qibla.svg()}</div>
         <div class="ftext"><b>القبلة</b><span id="qcardHint">اضغط لتفعيل البوصلة</span></div><a class="go" href="#/qibla" aria-label="صفحة القبلة">${ARROW}</a></div>
-      ${MAIN_FEATURES.map((f, i) => `<a class="fcard" href="${f.href}" style="--d:${(i + 1) * 70}ms"><div class="fart">${ART[f.art]}</div><div class="ftext"><b>${f.t}</b><span>${f.d}</span></div><span class="go">${ARROW}</span></a>`).join('')}
+      ${MAIN_FEATURES.map((f, i) => `<a class="fcard" href="${f.href}" style="--d:${(i + 1) * 70}ms;--tint:${f.tint};--ink:${f.ink}"><div class="fart">${ART[f.art]}</div><div class="ftext"><b>${f.t}</b><span>${f.d}</span></div><span class="go">${ARROW}</span></a>`).join('')}
     </div>
-    <div class="hero" id="dailyAyah" style="margin-top:22px"><small class="tag gold">آية اليوم</small><div class="ayah-text">…</div><small class="muted"></small></div>
-    <div class="section"><h2>أعلام التلاوة</h2><a href="#/listen">الكل</a></div>
-    <div class="hscroll" id="featured">${'<div class="rcard"><div class="skeleton" style="height:150px"></div></div>'.repeat(4)}</div>
-    <div class="section"><h2>سور مختارة</h2><a href="#/mushaf">المصحف</a></div>
-    <div class="chips">${[1, 36, 55, 56, 67, 112, 113, 114].map(n => `<a class="chip" href="#/surah/${n}">${SURAHS[n - 1].name}</a>`).join('')}</div>`;
+    <div class="ayah-card" id="dailyAyah"><span class="tag gold">آية اليوم</span><div class="ayah-text">…</div><small class="muted"></small></div>`;
   setupQiblaCard();
   if (lastItem) $('#resume').onclick = () => { P.load(last.q, last.i); const pos = store.get('lastPos', 0); audio.addEventListener('loadedmetadata', () => { if (pos < audio.duration - 3) audio.currentTime = pos; }, { once: true }); };
   // آية اليوم: ثابتة طوال اليوم
@@ -203,10 +194,6 @@ async function viewHome() {
     const a = d.data; $('#dailyAyah .ayah-text').textContent = a.text;
     $('#dailyAyah small.muted').innerHTML = `<a href="#/surah/${a.surah.number}/${a.numberInSurah}">سورة ${SURAHS[a.surah.number - 1].name} · ${arNum(a.numberInSurah)}</a>`;
   }).catch(() => { $('#dailyAyah .ayah-text').textContent = 'أَلَا بِذِكْرِ ٱللَّهِ تَطْمَئِنُّ ٱلْقُلُوبُ'; $('#dailyAyah small.muted').textContent = 'سورة الرعد · ٢٨'; });
-  loadReciters().then(list => {
-    const feat = FEATURED_KEYS.map(k => list.find(r => r.key.includes(k))).filter(Boolean);
-    $('#featured') && ($('#featured').innerHTML = feat.map(rcard).join(''));
-  }).catch(() => { $('#featured') && ($('#featured').innerHTML = '<p class="muted">تعذّر تحميل القراء</p>'); });
 }
 function setupQiblaCard() {
   const card = $('#qcard'); let started = false;
@@ -219,8 +206,8 @@ function setupQiblaCard() {
   // يشتغل تلقائياً لو المستخدم فعّله قبل كده (أندرويد)، أما iOS فيحتاج لمسة كل مرة
   if (store.get('qiblaOn') && Qibla.canAutoStart()) go();
 }
-const rcard = r => `<a class="rcard" href="#/reciter/${r.id}"><div class="card"><div class="avatar">${esc(initials(r.name))}</div><b>${esc(r.name)}</b><small class="muted">${r.late ? 'رحمه الله' : (countryOf(r.country)?.name || '')}</small></div></a>`;
-const rrow = r => `<a class="row" href="#/reciter/${r.id}"><div class="avatar">${esc(initials(r.name))}</div><div class="meta"><b>${esc(r.name)}</b><small>${esc(reciterLabel(r) || arNum(r.moshaf.length) + ' مصحف')}</small></div>${favs.has(String(r.id)) ? '<span class="tag gold">♥</span>' : ''}</a>`;
+const rcard = r => `<a class="rcard" href="#/reciter/${r.id}"><div class="avatar">${esc(initials(r.name))}</div><b>${esc(r.name)}</b><small class="muted">${r.late ? 'رحمه الله' : (countryOf(r.country)?.name || '')}</small></a>`;
+const rrow = r => `<a class="row" href="#/reciter/${r.id}"><div class="avatar">${esc(initials(r.name))}</div><div class="meta"><b>${esc(r.name)}</b><small>${esc(reciterLabel(r) || arNum(r.moshaf.length) + ' مصحف')}</small></div>${favs.has(String(r.id)) ? '<span style="color:var(--danger)">♥</span>' : ''}</a>`;
 
 /* ================== استمع ================== */
 let listenFilter = 'all', listenQuery = '';
@@ -229,17 +216,19 @@ async function viewListen(f) {
   view.innerHTML = `
     <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" placeholder="ابحث عن قارئ… (مثال: المنشاوي)" value="${esc(listenQuery)}"></div>
     <div class="chips" id="filters">
-      ${[['all', 'الكل'], ['fav', '♥ المفضلة'], ['late', 'رحمهم الله'], ...COUNTRIES.map(c => [c.id, c.flag + ' ' + c.name]), ['other', '🌍 دول أخرى']]
+      ${[['all', 'الكل'], ['fav', '♥ المفضلة'], ['eg', '🇪🇬 مصر'], ['sa', '🇸🇦 السعودية'], ['world', '🌍 العالم']]
       .map(([id, l]) => `<button class="chip ${listenFilter === id ? 'on' : ''}" data-f="${id}">${l}</button>`).join('')}
     </div>
-    <a class="row" href="#/radio" style="margin-bottom:12px"><div class="disc">${ICON.radio}</div><div class="meta"><b>إذاعات القرآن المباشرة</b><small>بث مباشر ٢٤ ساعة لكبار القراء</small></div></a>
-    <div id="count" class="muted" style="font-size:13px;margin-bottom:8px"></div>
+    <div id="featWrap"><div class="section" style="margin-top:4px"><h2>أعلام التلاوة</h2></div><div class="hscroll" id="featured"></div></div>
+    <div class="section" id="allTitle"><h2>كل القرّاء</h2><small class="muted" id="count"></small></div>
     <div class="list" id="rlist">${'<div class="skeleton"></div>'.repeat(8)}</div>`;
   const list = await loadReciters();
   const draw = () => {
     const q = norm(listenQuery);
-    const res = list.filter(r => (!q || r.key.includes(q)) && (listenFilter === 'all' || (listenFilter === 'fav' ? favs.has(String(r.id)) : listenFilter === 'late' ? r.late : r.country === listenFilter)));
+    const res = list.filter(r => (!q || r.key.includes(q)) && (listenFilter === 'all' || (listenFilter === 'fav' ? favs.has(String(r.id)) : listenFilter === 'world' ? !['eg', 'sa'].includes(r.country) : r.country === listenFilter)));
     $('#count').textContent = arNum(res.length) + ' قارئ';
+    const showFeat = listenFilter === 'all' && !q; $('#featWrap').hidden = !showFeat;
+    if (showFeat && !$('#featured').innerHTML) $('#featured').innerHTML = FEATURED_KEYS.map(k => list.find(r => r.key.includes(k))).filter(Boolean).map(rcard).join('');
     $('#rlist').innerHTML = res.length ? res.slice(0, 400).map(rrow).join('') : `<div class="empty">${listenFilter === 'fav' ? 'لم تضف قراء للمفضلة بعد' : 'لا توجد نتائج'}</div>`;
   };
   draw();
@@ -258,16 +247,14 @@ async function viewReciter(id) {
     view.innerHTML = `
       <div class="profile"><div class="avatar">${esc(initials(r.name))}</div><div><h1 style="margin:0">${esc(r.name)}</h1><small class="muted">${esc(reciterLabel(r))}</small></div></div>
       <div class="actions">
-        <button class="btn" id="playAll">${ICON.play} تشغيل الكل</button>
-        <button class="btn ghost" id="shuffle">عشوائي</button>
-        <button class="btn ghost" id="fav" aria-label="المفضلة">${fav ? ICON.heartF : ICON.heart}</button>
+        <button class="pill primary" id="playAll">${ICON.play} استمع للمصحف كاملاً</button>
+        <button class="pill fav-btn" id="fav" aria-label="المفضلة">${fav ? ICON.heartF : ICON.heart}</button>
       </div>
-      ${r.moshaf.length > 1 ? `<select class="chip" id="moshaf" style="width:100%;margin-bottom:12px">${r.moshaf.map((x, i) => `<option value="${i}" ${i === mi ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>` : `<p class="muted" style="margin-top:0">${esc(m.name)}</p>`}
-      <div class="search"><input id="sq" placeholder="ابحث عن سورة…"></div>
+      ${r.moshaf.length > 1 ? `<select class="chip" id="moshaf">${r.moshaf.map((x, i) => `<option value="${i}" ${i === mi ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>` : `<p class="muted" style="margin-top:0">${esc(m.name)}</p>`}
+      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="sq" placeholder="ابحث عن سورة…"></div>
       <div class="list" id="slist">${items.map((it, i) => `<button class="row ${P.cur?.url === it.url ? 'playing' : ''}" data-i="${i}" data-play="${esc(it.url)}" data-k="${norm(SURAHS[it.surah - 1].name)}">
         <span class="num">${arNum(it.surah)}</span><div class="meta"><b>${SURAHS[it.surah - 1].name}</b><small>${SURAHS[it.surah - 1].type} · ${arNum(SURAHS[it.surah - 1].ayahs)} آية</small></div>${ICON.play}</button>`).join('')}</div>`;
     $('#playAll').onclick = () => P.load(items, 0);
-    $('#shuffle').onclick = () => P.load([...items].sort(() => Math.random() - .5), 0);
     $('#fav').onclick = () => { toggleFav(r.id); draw(); };
     $('#slist').onclick = e => { const b = e.target.closest('[data-i]'); if (b) P.load(items, +b.dataset.i); };
     $('#sq').oninput = e => { const q = norm(e.target.value); view.querySelectorAll('#slist .row').forEach(el => el.hidden = q && !el.dataset.k.includes(q)); };
@@ -291,7 +278,7 @@ async function viewRadio() {
 async function viewMushaf() {
   const lastRead = store.get('lastRead');
   view.innerHTML = `
-    ${lastRead ? `<a class="hero" style="display:block;margin-bottom:14px" href="#/surah/${lastRead.s}/${lastRead.a || 1}"><small class="tag gold">آخر قراءة</small><h2 style="margin-top:8px">سورة ${SURAHS[lastRead.s - 1].name}</h2><small class="muted">الآية ${arNum(lastRead.a || 1)} · اضغط للمتابعة</small></a>` : ''}
+    ${lastRead ? `<a class="ayah-card" style="display:block;margin:0 0 14px" href="#/surah/${lastRead.s}/${lastRead.a || 1}"><small class="tag gold">آخر قراءة</small><h2 style="margin-top:8px">سورة ${SURAHS[lastRead.s - 1].name}</h2><small class="muted">الآية ${arNum(lastRead.a || 1)} · اضغط للمتابعة</small></a>` : ''}
     <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="mq" placeholder="ابحث باسم السورة أو رقمها…"></div>
     <div class="list" id="mlist">${SURAHS.map(s => `<a class="row" href="#/surah/${s.n}" data-k="${norm(s.name)} ${s.n}"><span class="num">${arNum(s.n)}</span><div class="meta"><b>سورة ${s.name}</b><small>${s.type} · ${arNum(s.ayahs)} آية</small></div></a>`).join('')}</div>`;
   $('#mq').oninput = e => { const q = norm(e.target.value); view.querySelectorAll('#mlist .row').forEach(el => el.hidden = q && !el.dataset.k.includes(q)); };
@@ -306,17 +293,16 @@ async function viewSurah(n, ayah) {
   const size = store.get('qsize', 26);
   view.innerHTML = `
     <div class="reader-tools">
-      <button class="chip" id="fzMinus">أ−</button><button class="chip" id="fzPlus">أ+</button>
-      <button class="chip" id="listenS">🎧 استمع للسورة</button>
-      ${n > 1 ? `<a class="chip" href="#/surah/${n - 1}">→ السابقة</a>` : ''}${n < 114 ? `<a class="chip" href="#/surah/${n + 1}">التالية ←</a>` : ''}
+      <button class="chip on" id="listenS">🎧 استمع</button>
+      <button class="chip" id="fzPlus" aria-label="تكبير الخط">أ+</button><button class="chip" id="fzMinus" aria-label="تصغير الخط">أ−</button>
     </div>
-    <div class="mushaf-head"><h1>سورة ${s.name}</h1><small class="muted">${s.type} · ${arNum(s.ayahs)} آية</small></div>
+    <div class="mushaf-page"><div class="mushaf-head"><h1>سورة ${s.name}</h1><small class="muted">${s.type} · ${arNum(s.ayahs)} آية</small></div>
     ${n !== 1 && n !== 9 ? `<div class="basmala">${BASM}</div>` : ''}
     <div class="mushaf-text" id="mtext" style="--qsize:${size}px">${ayahs.map(a => {
       let t = a.text; if (a.numberInSurah === 1 && n !== 1 && n !== 9 && t.startsWith('بِسْمِ')) t = t.replace(/^\S+\s+\S+\s+\S+\s+\S+\s*/, ''); // إزالة البسملة المدمجة في النص
       return `<span class="a" id="a${a.numberInSurah}" data-a="${a.numberInSurah}">${esc(t)} <span class="m">﴿${arNum(a.numberInSurah)}﴾</span></span> `;
-    }).join('')}</div>
-    <div class="actions" style="justify-content:center;margin-top:20px">${n < 114 ? `<a class="btn" href="#/surah/${n + 1}">السورة التالية: ${SURAHS[n].name}</a>` : ''}</div>`;
+    }).join('')}</div></div>
+    <div class="actions" style="margin-top:20px">${n < 114 ? `<a class="pill primary wide" href="#/surah/${n + 1}">السورة التالية: ${SURAHS[n].name}</a>` : ''}</div>`;
   const setSize = v => { v = Math.min(44, Math.max(18, v)); store.set('qsize', v); $('#mtext').style.setProperty('--qsize', v + 'px'); };
   $('#fzMinus').onclick = () => setSize(store.get('qsize', 26) - 2); $('#fzPlus').onclick = () => setSize(store.get('qsize', 26) + 2);
   $('#mtext').onclick = e => { const a = e.target.closest('.a'); if (!a) return; view.querySelectorAll('.a.sel').forEach(x => x.classList.remove('sel')); a.classList.add('sel'); store.set('lastRead', { s: n, a: +a.dataset.a }); toast('تم حفظ موضع القراءة: الآية ' + arNum(a.dataset.a)); };
@@ -339,7 +325,7 @@ async function viewLessons() {
     $('#scholars').innerHTML = list.map(s => { const c = countryOf(s.country); return `<a class="row" target="_blank" rel="noopener" href="${yt(s.name + ' ' + s.topic)}"><div class="avatar">${esc(initials(s.name))}</div><div class="meta"><b>${esc(s.name)}</b><small>${c.flag} ${c.name} · ${esc(s.topic)}${s.d ? ' · رحمه الله' : ''}</small></div><span class="tag">يوتيوب ↗</span></a>`; }).join('');
   };
   view.innerHTML = `
-    <div class="hero"><small class="tag gold">تعلّم وتدبّر</small><h2 style="margin:10px 0 4px">دروس وتفسير من علماء العالم الإسلامي</h2><small class="muted">اختر الدولة ثم العالم، أو استمع للتفسير الصوتي سورة بسورة</small></div>
+    <p class="muted" style="margin:0 0 6px">اختر الدولة ثم الشيخ، أو استمع للتفسير سورة بسورة</p>
     <div class="section"><h2>العلماء حسب الدولة</h2></div>
     <div class="chips" id="lc">${[['all', 'الكل'], ...LESSON_COUNTRIES.map(c => [c.id, c.flag + ' ' + c.name])].map(([id, l]) => `<button class="chip ${lessonCountry === id ? 'on' : ''}" data-c="${id}">${l}</button>`).join('')}</div>
     <div class="list" id="scholars"></div>
