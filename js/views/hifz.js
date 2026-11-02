@@ -5,6 +5,7 @@ import { SURAHS } from '../data.js';
 import { num, t } from '../i18n.js';
 import { player } from '../player.js';
 import { $, $$, esc, ICON, store, toast } from '../util.js';
+import './circles.js'; // keeps circle progress in sync when verses are memorised
 
 // Verse-by-verse recitations (Islamic Network CDN, free).
 const RECITERS = [

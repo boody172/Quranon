@@ -564,3 +564,13 @@ input[type=range] { width: 100%; margin-top: 20px; accent-color: var(--accent); 
 .ad-card b { display: block; margin-bottom: 8px; font: 700 19px var(--display); }
 .ad-card p { margin: 0 0 16px; color: var(--text-2); font-size: 15px; line-height: 1.75; }
 .ad-card .pill { width: 100%; }
+
+/* ---------- read along ---------- */
+.follow-note { margin: -4px 2px 12px; padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.6; background: var(--accent-soft); color: var(--accent-strong); }
+.follow-note.none { background: #fff6e5; color: #8a5a12; }
+.follow-note a { font-weight: 600; text-decoration: underline; }
+.mushaf-text .a.now { background: rgb(15 118 110 / .07); box-shadow: 0 0 0 4px rgb(15 118 110 / .07); }
+.mushaf-text .a.now .w { color: #6f7d77; transition: color .25s; }
+.mushaf-text .a.now .w.lit { color: var(--accent-strong); }
+.mushaf-text .a.now .w.cur { color: var(--accent); background: rgb(15 118 110 / .14); border-radius: 6px; }
+.basmala.now { color: var(--accent); }

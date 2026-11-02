@@ -2,14 +2,14 @@
 // App files are precached per release and served straight from the cache (no network wait on open).
 // A new release = a new VERSION here: the browser sees the changed sw.js, precaches the new files,
 // and open pages reload once onto them. Catalogue APIs: stale-while-revalidate. Audio is never touched.
-const VERSION = 'v25';
+const VERSION = 'v27';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [
   './', 'index.html', 'manifest.json', 'icons/icon.svg', 'icons/logo.svg', 'icons/icon-192.webp', 'icons/icon-256.webp', 'icons/icon-512.webp',
   'css/fonts.css', 'css/style.css', 'i18n/ar.json', 'i18n/en.json', 'data/reciter-photos.json', 'data/audio-quality.json', 'data/extra-reciters.json',
   'js/app.js', 'js/util.js', 'js/config.js', 'js/api.js', 'js/catalog.js', 'js/account.js', 'js/player.js',
-  'js/qibla.js', 'js/art.js', 'js/data.js', 'js/i18n.js', 'js/sleep.js', 'js/carplay.js', 'js/ads.js',
+  'js/qibla.js', 'js/art.js', 'js/data.js', 'js/i18n.js', 'js/sleep.js', 'js/follow.js', 'js/carplay.js', 'js/ads.js',
   'js/views/home.js', 'js/views/listen.js', 'js/views/mushaf.js', 'js/views/more.js', 'js/views/hifz.js', 'js/views/plus.js', 'js/views/circles.js',
   'fonts/plex-ar-400.woff2', 'fonts/plex-ar-500.woff2', 'fonts/plex-ar-600.woff2',
   'fonts/alexandria-ar-500.woff2', 'fonts/alexandria-ar-700.woff2', 'fonts/amiri-quran.woff2',

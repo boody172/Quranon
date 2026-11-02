@@ -304,5 +304,8 @@
   "quality.high": "High quality",
   "quality.low": "older, lower-quality recording",
   "track.excerpt": "From Surah {name}",
-  "track.excerptShort": "Selected verses"
+  "track.excerptShort": "Selected verses",
+  "follow.on": "Reading along: the verse and its words light up as they're recited. Tap any verse to jump there.",
+  "follow.none": "This recording has no verse timings, so the text can't follow it. Try another reciter such as El-Minshawi, Al-Husary or Yasser Al-Dossary.",
+  "follow.other": "The reciter is now on Surah {name}: open it to follow along"
 }

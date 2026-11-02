@@ -3,6 +3,7 @@ import { surahText } from '../api.js';
 import { findReciter, loadReciters, surahKey, surahMeta, surahName, surahNumbers, surahQueue, surahTitle } from '../catalog.js';
 import { SURAHS } from '../data.js';
 import { num, t } from '../i18n.js';
+import { follow, hasTiming } from '../follow.js';
 import { player } from '../player.js';
 import { $, $$, esc, ICON, norm, store, toast } from '../util.js';
 
@@ -32,19 +33,26 @@ function ayahMarkup({ number, text }, surahNo) {
   if (number === 1 && surahNo !== 1 && surahNo !== 9 && text.startsWith('بِسْمِ')) {
     text = text.replace(/^(\S+\s+){4}/, '');
   }
-  return `<span class="a" id="a${number}" data-a="${number}">${esc(text)} <span class="m">﴿${number.toLocaleString('ar-EG')}﴾</span></span> `;
+  // each word is its own span so read-along can light it up as the reciter says it
+  const words = text.split(/\s+/).filter(Boolean).map((w) => `<span class="w">${esc(w)}</span>`).join(' ');
+  return `<span class="a" id="a${number}" data-a="${number}">${words} <span class="m">﴿${number.toLocaleString('ar-EG')}﴾</span></span> `;
 }
 
 async function playSurah(n) {
   const all = await loadReciters();
   // The reciter the user opened last, otherwise Sheikh al-Minshawi.
   const r = findReciter(all, store.get('prefReciter')) || all.find((x) => x.arabicKey.includes('المنشاوي')) || all[0];
-  const moshaf = r.moshaf.find((m) => surahNumbers(m).includes(n)) || r.moshaf[0];
+  const withSurah = r.moshaf.filter((m) => surahNumbers(m).includes(n));
+  // Prefer one of this reciter's recordings that has verse timings, so the text can follow along.
+  let moshaf = withSurah[0] || r.moshaf[0];
+  for (const m of withSurah) {
+    if (await hasTiming(surahQueue(r, m)[0]?.url)) { moshaf = m; break; }
+  }
   const queue = surahQueue(r, moshaf);
   player.play(queue, Math.max(0, queue.findIndex((i) => i.surah === n)));
 }
 
-export async function surah(view, { args: [numArg, ayahArg], setTitle }) {
+export async function surah(view, { args: [numArg, ayahArg], setTitle, onCleanup }) {
   const n = Math.min(114, Math.max(1, Number(numArg) || 1));
   setTitle(surahTitle(n));
   view.innerHTML = '<div class="list">' + '<div class="skeleton tall"></div>'.repeat(4) + '</div>';
@@ -59,6 +67,7 @@ export async function surah(view, { args: [numArg, ayahArg], setTitle }) {
       <button class="chip" id="bigger" aria-label="${t('mushaf.bigger')}">+A</button>
       <button class="chip" id="smaller" aria-label="${t('mushaf.smaller')}">−A</button>
     </div>
+    <p class="follow-note" id="followNote" hidden></p>
     <article class="mushaf-page" lang="ar" dir="rtl">
       <header class="mushaf-head"><h1>سورة ${SURAHS[n - 1].name}</h1><small dir="auto">${surahMeta(n)}</small></header>
       ${n !== 1 && n !== 9 ? `<p class="basmala">${BASMALA}</p>` : ''}
@@ -103,12 +112,29 @@ export async function surah(view, { args: [numArg, ayahArg], setTitle }) {
     showBar(Number(el.dataset.a));
   };
   $('#saveAyah').onclick = () => {
-    const text = $('#a' + selected).firstChild.textContent.trim();
+    const text = ayahs.find((a) => a.number === selected)?.text || '';
     const now = saved.toggle({ type: 'ayah', ref: `${n}:${selected}`, title: t('ayah.ref', { surah: surahName(n), n: selected }), subtitle: text.slice(0, 150) });
     toast(t(now ? 'toast.saved' : 'toast.removed'));
     showBar(selected);
   };
   $('#closeBar').onclick = () => { $('#ayahBar').hidden = true; };
+
+  // ---------- read along with the reciter ----------
+  let wasFollowing = false;
+  const note = $('#followNote');
+  const stop = follow($('.mushaf-page'), n, (state, item) => {
+    note.hidden = state === 'idle';
+    note.className = 'follow-note ' + state;
+    if (state === 'on') note.textContent = t('follow.on');
+    else if (state === 'none') note.textContent = t('follow.none');
+    else if (state === 'other') {
+      // the recitation moved on to the next surah (khatma, playlist): turn the page with it
+      if (wasFollowing) { location.hash = '#/surah/' + item.surah; return; }
+      note.innerHTML = `<a href="#/surah/${item.surah}">${esc(t('follow.other', { name: surahName(item.surah) }))}</a>`;
+    }
+    wasFollowing = state === 'on';
+  });
+  onCleanup(stop);
 
   if (store.get('lastRead')?.s !== n) store.set('lastRead', { s: n, a: Number(ayahArg) || 1 });
   const target = ayahArg && $('#a' + Number(ayahArg));

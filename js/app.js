@@ -5,33 +5,34 @@ import { SURAHS } from './data.js';
 import { i18n, pick, t } from './i18n.js';
 import { player } from './player.js';
 import { $, clearCachedData, esc, ICON, store } from './util.js';
-import home from './views/home.js';
-import { listen, reciter } from './views/listen.js';
-import { mushaf, surah } from './views/mushaf.js';
-import { accountView, lessons, qiblaView, radio, savedView, scholarView, search } from './views/more.js';
-import { hifz } from './views/hifz.js';
-import { plus } from './views/plus.js';
-import { circle, circles } from './views/circles.js';
 import { initCarPlay, refreshCarPlay } from './carplay.js';
 import { initAds, monetization } from './ads.js';
 
+// Screens load on first visit (the service worker already has them cached), so opening the app only
+// parses the home screen.
+const lazy = (load, name = 'default') => () => load().then((m) => m[name]);
+const listen = () => import('./views/listen.js');
+const mushaf = () => import('./views/mushaf.js');
+const more = () => import('./views/more.js');
+const circles = () => import('./views/circles.js');
+
 const ROUTES = {
-  home: { view: home },
-  listen: { view: listen, title: 'page.listen' },
-  reciter: { view: reciter, parent: '#/listen' },
-  mushaf: { view: mushaf, title: 'page.mushaf' },
-  surah: { view: surah, parent: '#/mushaf' },
-  radio: { view: radio, title: 'page.radio' },
-  lessons: { view: lessons, title: 'page.lessons' },
-  scholar: { view: scholarView, parent: '#/lessons' },
-  qibla: { view: qiblaView, title: 'page.qibla' },
-  search: { view: search, title: 'page.search' },
-  saved: { view: savedView, title: 'page.saved' },
-  account: { view: accountView, title: 'page.account' },
-  plus: { view: plus, title: 'page.plus' },
-  hifz: { view: hifz, title: 'page.hifz' },
-  circles: { view: circles, title: 'page.circles', parent: '#/hifz' },
-  circle: { view: circle, parent: '#/circles' },
+  home: { load: lazy(() => import('./views/home.js')) },
+  listen: { load: lazy(listen, 'listen'), title: 'page.listen' },
+  reciter: { load: lazy(listen, 'reciter'), parent: '#/listen' },
+  mushaf: { load: lazy(mushaf, 'mushaf'), title: 'page.mushaf' },
+  surah: { load: lazy(mushaf, 'surah'), parent: '#/mushaf' },
+  radio: { load: lazy(more, 'radio'), title: 'page.radio' },
+  lessons: { load: lazy(more, 'lessons'), title: 'page.lessons' },
+  scholar: { load: lazy(more, 'scholarView'), parent: '#/lessons' },
+  qibla: { load: lazy(more, 'qiblaView'), title: 'page.qibla' },
+  search: { load: lazy(more, 'search'), title: 'page.search' },
+  saved: { load: lazy(more, 'savedView'), title: 'page.saved' },
+  account: { load: lazy(more, 'accountView'), title: 'page.account' },
+  plus: { load: lazy(() => import('./views/plus.js'), 'plus'), title: 'page.plus' },
+  hifz: { load: lazy(() => import('./views/hifz.js'), 'hifz'), title: 'page.hifz' },
+  circles: { load: lazy(circles, 'circles'), title: 'page.circles', parent: '#/hifz' },
+  circle: { load: lazy(circles, 'circle'), parent: '#/circles' },
 };
 
 const view = $('#view');
@@ -70,7 +71,9 @@ async function route() {
   window.scrollTo(0, 0);
 
   try {
-    await def.view(view, { args, setTitle, onCleanup: (fn) => cleanups.push(fn) });
+    const render = await def.load();
+    if (currentName !== name) return; // the user moved on while the screen was loading
+    await render(view, { args, setTitle, onCleanup: (fn) => cleanups.push(fn) });
   } catch (err) {
     console.error(err);
     view.innerHTML = `<div class="empty-state"><h2>${t('error.offlineTitle')}</h2><p>${t('error.offlineText')}</p>
@@ -165,6 +168,8 @@ initAds();
   const fresh = await appConfig();
   checkRelease(fresh);
   loadReciters().catch(() => {});
+  listen().catch(() => {});
+  mushaf().catch(() => {});
 });
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {

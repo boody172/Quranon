@@ -7,7 +7,7 @@ import { LESSON_COUNTRIES, SURAHS } from '../data.js';
 import { i18n, num, t } from '../i18n.js';
 import { markPlaying, player } from '../player.js';
 import { Qibla } from '../qibla.js';
-import { $, $$, avatar, esc, ICON, norm, store, toast } from '../util.js';
+import { $, $$, avatar, esc, ICON, norm, toast } from '../util.js';
 
 const filterRows = (input, rows) => input.addEventListener('input', () => {
   const q = norm(input.value);
