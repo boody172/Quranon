@@ -101,15 +101,18 @@ export async function loadScholars() {
 const LESSON_PAGE = 30;
 const audioFile = /\.(mp3|m4a|ogg)$/i;
 const naturalOrder = (a, b) => a.localeCompare(b, 'ar', { numeric: true });
+// Community collections sometimes bundle a programme's theme song or nasheeds: never play those.
+const notALesson = /(أغني|اغني|أغان|اغان|غناء|نشيد|أنشود|انشود|موسيق|song|music|nasheed)/i;
+const tidyTitle = (text) => text.replace(/[_]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
 async function archiveLessons(identifier) {
   const meta = await cachedJSON(`${SOURCES.archive}/metadata/${encodeURIComponent(identifier)}`, { key: 'ia-' + identifier, maxAgeHours: 24 * 7 });
   return (meta.files || [])
-    .filter((f) => f.source === 'original' && audioFile.test(f.name))
+    .filter((f) => f.source === 'original' && audioFile.test(f.name) && !notALesson.test(`${f.title || ''} ${f.name}`))
     .sort((a, b) => naturalOrder(a.name, b.name))
     .map((f) => ({
       key: f.name,
-      title: f.title || f.name.split('/').pop().replace(audioFile, '').replace(/[_-]+/g, ' ').trim(),
+      title: tidyTitle(f.title || f.name.split('/').pop().replace(audioFile, '')),
       parts: [{ url: `${SOURCES.archive}/download/${encodeURIComponent(identifier)}/${f.name.split('/').map(encodeURIComponent).join('/')}` }],
     }));
 }
