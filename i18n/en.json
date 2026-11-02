@@ -302,5 +302,7 @@
   "ads.text": "No subscriptions, no paid features. This short ad is the only way we cover development and server costs. Sorry for the interruption, and thank you for your patience.",
   "ads.continue": "Continue",
   "quality.high": "High quality",
-  "quality.low": "older, lower-quality recording"
+  "quality.low": "older, lower-quality recording",
+  "track.excerpt": "From Surah {name}",
+  "track.excerptShort": "Selected verses"
 }

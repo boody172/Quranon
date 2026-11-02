@@ -1,0 +1,137 @@
+[
+ {
+  "_note": "Reciters not on mp3quran. Audio from Internet Archive (fan uploads; ask the reciter's office before publishing). Photo: data/reciter-photos.json by id.",
+  "id": "x-mossad",
+  "name": {
+   "ar": "عبد الرحمن مسعد",
+   "en": "Abdulrahman Mossad"
+  },
+  "country": "eg",
+  "moshaf": [
+   {
+    "id": "x-mossad-1",
+    "name": {
+     "ar": "تلاوات مختارة — حفص عن عاصم",
+     "en": "Selected recitations — Hafs"
+    },
+    "tracks": [
+     {
+      "surah": 2,
+      "url": "https://archive.org/download/onlymp-3.to-sourate-al-baqarah-abdulrhman-mosad-u-vqp-d-ta-g-98-192k-1707128147/onlymp3.to%20-%20sourate_al_baqarah__abdulrhman_mosad_%D8%B3%D9%88%D8%B1%D8%A9_%D8%A7%D9%84%D8%A8%D9%82%D8%B1%D8%A9_%D9%83%D8%A7%D9%85%D9%84%D8%A9___%D8%B7%D8%A7%D8%B1%D8%AF%D8%A9_%D8%A7%D9%84%D8%B4%D9%8A%D8%A7%D8%B7%D9%8A%D9%86___%D8%B9%D8%A8%D8%AF%D8%A7%D9%84%D8%B1%D8%AD%D9%85%D9%86_%D9%85%D8%B3%D8%B9%D8%AF__%D8%AC%D9%88%D8%AF%D8%A9_%D8%B9%D8%A7%D9%84%D9%8A%D8%A9-uVqp_dTaG98-192k-1707128147.mp3",
+      "full": true
+     },
+     {
+      "surah": 3,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/003.mp3",
+      "full": false
+     },
+     {
+      "surah": 5,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/005.mp3",
+      "full": false
+     },
+     {
+      "surah": 7,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/007.mp3",
+      "full": false
+     },
+     {
+      "surah": 10,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/010.mp3",
+      "full": false
+     },
+     {
+      "surah": 15,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/015.mp3",
+      "full": true
+     },
+     {
+      "surah": 16,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/016.mp3",
+      "full": false
+     },
+     {
+      "surah": 19,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/019.mp3",
+      "full": false
+     },
+     {
+      "surah": 23,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/023.mp3",
+      "full": false
+     },
+     {
+      "surah": 24,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/024.mp3",
+      "full": false
+     },
+     {
+      "surah": 25,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/025.mp3",
+      "full": false
+     },
+     {
+      "surah": 30,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/030.mp3",
+      "full": false
+     },
+     {
+      "surah": 32,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/032.mp3",
+      "full": true
+     },
+     {
+      "surah": 67,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/067.mp3",
+      "full": true
+     },
+     {
+      "surah": 73,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/073.mp3",
+      "full": true
+     },
+     {
+      "surah": 78,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/078.mp3",
+      "full": true
+     },
+     {
+      "surah": 87,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/087.mp3",
+      "full": true
+     },
+     {
+      "surah": 88,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/088.mp3",
+      "full": true
+     },
+     {
+      "surah": 100,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/100.mp3",
+      "full": true
+     },
+     {
+      "surah": 107,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/107.mp3",
+      "full": true
+     },
+     {
+      "surah": 112,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/112.mp3",
+      "full": true
+     },
+     {
+      "surah": 113,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/113.mp3",
+      "full": true
+     },
+     {
+      "surah": 114,
+      "url": "https://archive.org/download/AbdulrahmanMassaad/114.mp3",
+      "full": true
+     }
+    ]
+   }
+  ]
+ }
+]

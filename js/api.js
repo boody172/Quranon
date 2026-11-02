@@ -8,7 +8,7 @@ const SURAH_AYAHS = SURAHS.map((s) => s.ayahs);
 // Data providers. The dashboard can point these at another provider or a mirror
 // (see "API sources" in the admin settings); values arrive with /api/config.
 export const SOURCES = {
-  audio: 'https://mp3quran.net/api/v3',
+  audio: 'https://www.mp3quran.net/api/v3',
   text: 'https://api.alquran.cloud/v1',
   textProvider: 'alquran_cloud', // alquran_cloud | quran_com
   islamhouse: 'https://api3.islamhouse.com/v3/paV29H2gm56kvLPy', // public API key published by IslamHouse

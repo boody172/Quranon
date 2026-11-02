@@ -2,12 +2,12 @@
 // App files are precached per release and served straight from the cache (no network wait on open).
 // A new release = a new VERSION here: the browser sees the changed sw.js, precaches the new files,
 // and open pages reload once onto them. Catalogue APIs: stale-while-revalidate. Audio is never touched.
-const VERSION = 'v23';
+const VERSION = 'v24';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [
   './', 'index.html', 'manifest.json', 'icons/icon.svg', 'icons/logo.svg', 'icons/icon-192.webp', 'icons/icon-256.webp', 'icons/icon-512.webp',
-  'css/fonts.css', 'css/style.css', 'i18n/ar.json', 'i18n/en.json', 'data/reciter-photos.json', 'data/audio-quality.json',
+  'css/fonts.css', 'css/style.css', 'i18n/ar.json', 'i18n/en.json', 'data/reciter-photos.json', 'data/audio-quality.json', 'data/extra-reciters.json',
   'js/app.js', 'js/util.js', 'js/config.js', 'js/api.js', 'js/catalog.js', 'js/account.js', 'js/player.js',
   'js/qibla.js', 'js/art.js', 'js/data.js', 'js/i18n.js', 'js/sleep.js', 'js/carplay.js', 'js/ads.js',
   'js/views/home.js', 'js/views/listen.js', 'js/views/mushaf.js', 'js/views/more.js', 'js/views/hifz.js', 'js/views/plus.js', 'js/views/circles.js',
@@ -54,5 +54,5 @@ self.addEventListener('fetch', (e) => {
     }
     e.respondWith(caches.match(req, { cacheName: SHELL, ignoreSearch: true }).then((hit) => hit || staleWhileRevalidate(req, DATA)));
   } else if (url.host === 'api.alquran.cloud' || url.host === 'api.quran.com') e.respondWith(cacheFirst(req, DATA));
-  else if (url.host === 'mp3quran.net' && url.pathname.startsWith('/api/')) e.respondWith(staleWhileRevalidate(req, DATA));
+  else if (/(^|\.)mp3quran\.net$/.test(url.host) && url.pathname.startsWith('/api/')) e.respondWith(staleWhileRevalidate(req, DATA));
 });

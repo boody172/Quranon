@@ -32,6 +32,9 @@ function tag(arabicName) {
 let photosPromise = null;
 // Measured bitrate / sample rate of every recording (scripts: probe of each recording's first file).
 let qualityPromise = null;
+// Reciters that mp3quran doesn't carry, with their own track URLs (data/extra-reciters.json).
+let extraPromise = null;
+const loadExtra = () => (extraPromise ||= fetch('data/extra-reciters.json').then((r) => (r.ok ? r.json() : [])).catch(() => []));
 const loadQuality = () => (qualityPromise ||= fetch('data/audio-quality.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
 
 /** 3 = studio (≥192 kbps), 2 = clear (128 kbps), 1 = acceptable, 0 = muffled (low bitrate or narrow band). */
@@ -50,12 +53,13 @@ export async function loadReciters() {
   if (cache.has(lang)) return cache.get(lang);
 
   // Arabic names drive country tagging and featured detection; localized names are shown to the user.
-  const [arabic, localized, config, photos, quality] = await Promise.all([
+  const [arabic, localized, config, photos, quality, extra] = await Promise.all([
     fetchReciters('ar'),
     lang === 'ar' ? null : fetchReciters(lang).catch(() => null),
     appConfig(),
     loadPhotos(),
     loadQuality(),
+    loadExtra(),
   ]);
   const shown = new Map((localized?.reciters || []).map((r) => [r.id, r]));
   const profiles = new Map((config?.reciters || []).map((p) => [p.id, p]));
@@ -80,8 +84,31 @@ export async function loadReciters() {
         featured: Boolean(profile?.featured),
         photo: profile?.photo || photos[r.id] || null, // admin photo first, then the bundled Wikimedia one
       };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name, i18n.lang));
+    });
+
+  for (const x of extra) {
+    const arabicName = x.name.ar;
+    const tagged = tag(arabicName);
+    list.push({
+      id: x.id,
+      name: pick(x.name) || arabicName,
+      arabicKey: tagged.key,
+      key: tagged.key + ' ' + norm(pick(x.name)),
+      country: x.country || tagged.country,
+      late: Boolean(x.late),
+      featured: false,
+      photo: profiles.get(x.id)?.photo || photos[x.id] || null,
+      moshaf: x.moshaf.map((m, i) => ({
+        id: m.id,
+        name: pick(m.name),
+        tracks: m.tracks,
+        surah_list: m.tracks.map((tr) => tr.surah).join(','),
+        quality: 2,
+        order: i,
+      })),
+    });
+  }
+  list.sort((a, b) => a.name.localeCompare(b.name, i18n.lang));
   cache.set(lang, list);
   return list;
 }
@@ -105,6 +132,13 @@ export function surahQueue(reciter, moshaf) {
   const sub = reciter.name + (reciter.moshaf.length > 1 ? ` — ${moshaf.name}` : '');
   const fav = { type: 'reciter', ref: String(reciter.id), title: reciter.name, subtitle: reciterLine(reciter) };
   const photo = reciter.photo || null;
+  // Reciters outside mp3quran carry their own file per surah; some are excerpts ("ما تيسر من …").
+  if (moshaf.tracks) {
+    return moshaf.tracks.map((tr) => ({
+      title: tr.full ? surahTitle(tr.surah) : t('track.excerpt', { name: surahName(tr.surah) }),
+      sub, url: tr.url, surah: tr.surah, excerpt: !tr.full, fav, photo,
+    }));
+  }
   return surahNumbers(moshaf).map((n) => ({ title: surahTitle(n), sub, url: moshaf.server + pad3(n) + '.mp3', surah: n, fav, photo }));
 }
 

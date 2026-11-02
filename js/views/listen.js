@@ -131,7 +131,7 @@ export async function reciter(view, { args: [id], setTitle }) {
       <label class="search">${ICON.search}<input id="sq" type="search" placeholder="${t('reciter.searchSurah')}" autocomplete="off"></label>
       <div class="list" id="slist">${queue.map((item, i) => `
         <button class="row" data-i="${i}" data-play="${esc(item.url)}" data-k="${surahKey(item.surah)}">
-          <span class="num">${num(item.surah)}</span><span class="meta"><b>${esc(surahName(item.surah))}</b><small>${surahMeta(item.surah)}</small></span>${ICON.play}</button>`).join('')}
+          <span class="num">${num(item.surah)}</span><span class="meta"><b>${esc(surahName(item.surah))}</b><small>${item.excerpt ? t('track.excerptShort') : surahMeta(item.surah)}</small></span>${ICON.play}</button>`).join('')}
       </div>`;
 
     markPlaying();
