@@ -242,9 +242,46 @@ audio.addEventListener('ended', () => {
   if (sleep.onTrackEnd()) return;
   player.next(true);
 });
+// ---------- keep playing through bad connections (cars, tunnels, switching towers) ----------
+// A network hiccup used to stop the recitation with an error. Now the player waits, then reconnects and
+// continues from the same second; the user only hears about it if the connection stays gone.
+const recovery = { tries: 0, url: '', timer: null, stallTimer: null, wantPlay: false };
+
+function reconnect() {
+  const item = current();
+  if (!item) return;
+  if (recovery.url !== item.url) { recovery.url = item.url; recovery.tries = 0; }
+  if (recovery.tries >= 6) {
+    toast(`${t('player.cantLoad')} (${audio.error?.code ?? '?'})`);
+    return;
+  }
+  const at = item.live ? 0 : audio.currentTime || store.get('lastPos', 0);
+  const delay = [500, 1500, 3000, 5000, 8000, 12000][recovery.tries++];
+  clearTimeout(recovery.timer);
+  recovery.timer = setTimeout(() => {
+    if (!navigator.onLine) { recovery.tries--; recovery.timer = setTimeout(reconnect, 3000); return; } // wait for signal
+    audio.src = item.live ? item.url + (item.url.includes('?') ? '&' : '?') + 'r=' + Date.now() : item.url;
+    audio.load();
+    if (!item.live && at > 1) audio.addEventListener('loadedmetadata', () => { audio.currentTime = at; }, { once: true });
+    audio.play().catch(() => {});
+  }, delay);
+}
+
 audio.addEventListener('error', () => {
-  if (audio.getAttribute('src')) toast(`${t('player.cantLoad')} (${audio.error?.code ?? '?'})`);
+  if (!audio.getAttribute('src')) return;
+  // code 2 = network, 3 = decode hiccup, 4 = unreachable source: all worth retrying
+  reconnect();
 });
+// Buffer ran dry ("waiting"/"stalled"): give it 12 s to recover on its own, then reconnect.
+const watchStall = () => {
+  clearTimeout(recovery.stallTimer);
+  recovery.stallTimer = setTimeout(() => { if (!audio.paused && audio.readyState < 3) reconnect(); }, 12000);
+};
+audio.addEventListener('waiting', watchStall);
+audio.addEventListener('stalled', watchStall);
+audio.addEventListener('playing', () => { clearTimeout(recovery.stallTimer); recovery.tries = 0; });
+// Signal is back: resume right away instead of waiting for the next retry.
+addEventListener('online', () => { if (current() && audio.paused && recovery.tries) { recovery.tries = 0; reconnect(); } });
 
 // iOS 17+: treat this as media playback so the silent switch doesn't mute recitations.
 if (navigator.audioSession) {

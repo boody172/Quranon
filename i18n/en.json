@@ -300,5 +300,7 @@
   "circle.days": "{n} days",
   "ads.title": "Quranon is completely free 🤍",
   "ads.text": "No subscriptions, no paid features. This short ad is the only way we cover development and server costs. Sorry for the interruption, and thank you for your patience.",
-  "ads.continue": "Continue"
+  "ads.continue": "Continue",
+  "quality.high": "High quality",
+  "quality.low": "older, lower-quality recording"
 }

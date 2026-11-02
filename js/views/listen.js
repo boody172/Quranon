@@ -126,8 +126,8 @@ export async function reciter(view, { args: [id], setTitle }) {
         <button class="chip" id="playAll">${t('khatma.inOrder')}</button>
       </div>
       ${r.moshaf.length > 1
-        ? `<select class="select" id="moshaf" aria-label="${t('reciter.recitation')}">${r.moshaf.map((m, i) => `<option value="${i}"${i === moshafIndex ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select>`
-        : `<p class="muted">${esc(moshaf.name)}</p>`}
+        ? `<select class="select" id="moshaf" aria-label="${t('reciter.recitation')}">${r.moshaf.map((m, i) => `<option value="${i}"${i === moshafIndex ? ' selected' : ''}>${esc(m.name)}${m.quality === 3 ? ' · ' + t('quality.high') : m.quality === 0 ? ' · ' + t('quality.low') : ''}</option>`).join('')}</select>`
+        : `<p class="muted">${esc(moshaf.name)}${moshaf.quality === 3 ? ' · ' + t('quality.high') : moshaf.quality === 0 ? ' · ' + t('quality.low') : ''}</p>`}
       <label class="search">${ICON.search}<input id="sq" type="search" placeholder="${t('reciter.searchSurah')}" autocomplete="off"></label>
       <div class="list" id="slist">${queue.map((item, i) => `
         <button class="row" data-i="${i}" data-play="${esc(item.url)}" data-k="${surahKey(item.surah)}">

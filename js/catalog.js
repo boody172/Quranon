@@ -30,6 +30,19 @@ function tag(arabicName) {
 
 // Freely licensed portraits from Wikimedia Commons, matched once by scripts/reciter-photos (id → image URL).
 let photosPromise = null;
+// Measured bitrate / sample rate of every recording (scripts: probe of each recording's first file).
+let qualityPromise = null;
+const loadQuality = () => (qualityPromise ||= fetch('data/audio-quality.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
+
+/** 3 = studio (≥192 kbps), 2 = clear (128 kbps), 1 = acceptable, 0 = muffled (low bitrate or narrow band). */
+export function qualityRank(q) {
+  if (!q) return 1; // unknown (new recording): neutral
+  const [kbps, khz, mono] = q;
+  if (khz < 32 || kbps < 56 || (kbps < 96 && !mono)) return 0;
+  if (kbps >= 192 && khz >= 44.1) return 3;
+  if ((kbps >= 128 || (mono && kbps >= 64)) && khz >= 44.1) return 2;
+  return 1;
+}
 const loadPhotos = () => (photosPromise ||= fetch('data/reciter-photos.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
 
 export async function loadReciters() {
@@ -37,11 +50,12 @@ export async function loadReciters() {
   if (cache.has(lang)) return cache.get(lang);
 
   // Arabic names drive country tagging and featured detection; localized names are shown to the user.
-  const [arabic, localized, config, photos] = await Promise.all([
+  const [arabic, localized, config, photos, quality] = await Promise.all([
     fetchReciters('ar'),
     lang === 'ar' ? null : fetchReciters(lang).catch(() => null),
     appConfig(),
     loadPhotos(),
+    loadQuality(),
   ]);
   const shown = new Map((localized?.reciters || []).map((r) => [r.id, r]));
   const profiles = new Map((config?.reciters || []).map((p) => [p.id, p]));
@@ -52,9 +66,13 @@ export async function loadReciters() {
       const display = shown.get(r.id) || r;
       const profile = profiles.get(r.id);
       const tagged = tag(r.name);
+      // Cleanest recording first: it becomes the default everywhere (reciter page, khatma, shuffle, car).
+      const moshaf = (display.moshaf?.length ? display.moshaf : r.moshaf)
+        .map((m, i) => ({ ...m, quality: qualityRank(quality[m.id]), order: i }))
+        .sort((a, b) => b.quality - a.quality || a.order - b.order);
       return {
         ...display,
-        moshaf: display.moshaf?.length ? display.moshaf : r.moshaf,
+        moshaf,
         arabicKey: tagged.key,
         key: tagged.key + ' ' + norm(display.name),
         country: profile?.country || tagged.country,
@@ -150,7 +168,10 @@ export function recordKhatma(item, finished) {
  * options.pool narrows the reciters (e.g. only the user's saved ones).
  */
 export function mixedShuffle(reciters, { pool = null } = {}) {
-  const candidates = (pool?.length ? pool : reciters).filter((r) => r.moshaf?.length);
+  const withAudio = (pool?.length ? pool : reciters).filter((r) => r.moshaf?.length);
+  // Shuffle skips reciters whose only recordings sound muffled (unless that's all there is).
+  const clearOnes = withAudio.filter((r) => r.moshaf.some((m) => m.quality > 0));
+  const candidates = clearOnes.length ? clearOnes : withAudio;
   const recent = [];
   const pickOne = () => {
     // Choose only among reciters not heard recently (a back-to-back repeat is impossible).
@@ -159,7 +180,9 @@ export function mixedShuffle(reciters, { pool = null } = {}) {
     const r = (pool.length ? pool : candidates)[Math.floor(Math.random() * (pool.length || candidates.length))];
     recent.push(r.id);
     if (recent.length > Math.min(5, candidates.length - 1)) recent.shift();
-    const moshaf = r.moshaf[Math.floor(Math.random() * r.moshaf.length)];
+    const clear = r.moshaf.filter((m) => m.quality > 0);
+    const options = clear.length ? clear : r.moshaf;
+    const moshaf = options[Math.floor(Math.random() * options.length)];
     const surahs = surahNumbers(moshaf);
     const n = surahs[Math.floor(Math.random() * surahs.length)];
     return surahQueue(r, moshaf).find((item) => item.surah === n);
