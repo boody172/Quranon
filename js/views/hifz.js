@@ -179,10 +179,10 @@ async function session(view, setup, onCleanup) {
   function pause() { state.playing = false; audio.pause(); renderVerse(); }
 
   audio.addEventListener('ended', () => {
-    if (state.rep < setup.repeat) { state.rep++; audio.currentTime = 0; audio.play(); renderVerse(); return; }
+    if (state.rep < setup.repeat) { state.rep++; audio.currentTime = 0; audio.play().catch(() => {}); renderVerse(); return; }
     state.rep = 1;
-    if (state.index < verses.length - 1) { state.index++; load(); audio.play(); return; }
-    if (!setup.rounds || state.round < setup.rounds) { state.round++; state.index = 0; load(); audio.play(); return; }
+    if (state.index < verses.length - 1) { state.index++; load(); audio.play().catch(() => {}); return; }
+    if (!setup.rounds || state.round < setup.rounds) { state.round++; state.index = 0; load(); audio.play().catch(() => {}); return; }
     state.playing = false;
     renderVerse();
     toast(t('hifz.finished'));
@@ -205,44 +205,115 @@ async function session(view, setup, onCleanup) {
   };
   $('#changeSetup').onclick = () => { audio.pause(); hifz(view, { onCleanup }); };
 
-  // Recite from memory: speech recognition where the browser offers it, otherwise reveal-and-self-check.
-  $('#recite').onclick = () => {
+  // ---------- recite from memory ----------
+  // Speech recognition where it works; it is flaky on iPhone (it can stay silent forever), so every
+  // session is bounded by timers and always falls back to an honest self-check.
+  const reciteBtn = $('#recite');
+  const setReciteLabel = (key, active) => {
+    reciteBtn.classList.toggle('listening', active);
+    reciteBtn.innerHTML = `${ICON.mic} ${t(key)}`;
+  };
+
+  function showResult(heard) {
+    const words = verse().text.split(/\s+/).filter((w) => plain(w).length);
+    const result = compare(verse().text, heard);
+    const score = result.filter(Boolean).length / result.length;
+    $('#verse').innerHTML = words.map((w, i) => `<span class="${result[i] ? 'said' : 'missed'}">${esc(w)}</span>`).join(' ');
+    $('#check').hidden = false;
+    $('#check').textContent = t(score >= 0.85 ? 'hifz.great' : score >= 0.5 ? 'hifz.almost' : 'hifz.tryAgain', { pct: Math.round(score * 100) });
+    if (score >= 0.85) {
+      setMemorised(setup.surah, verse().number, true);
+      $('#markDone').innerHTML = `${ICON.check} ${t('hifz.memorised')}`;
+      $('#markDone').classList.add('done');
+    }
+  }
+
+  /** Works everywhere: reveal the verse and let the user grade themselves. */
+  function selfCheck(reasonKey) {
+    state.mode = 'show';
+    $$('#modes .chip').forEach((c) => c.classList.toggle('on', c.dataset.mode === 'show'));
+    renderVerse();
+    $('#check').hidden = false;
+    $('#check').innerHTML = `<span>${esc(t(reasonKey))}</span>
+      <span class="self-check"><button class="pill soft" data-grade="ok">${ICON.check} ${t('hifz.gotIt')}</button>
+      <button class="pill" data-grade="again">${t('hifz.again')}</button></span>`;
+  }
+  $('#check').onclick = (e) => {
+    const grade = e.target.closest('[data-grade]')?.dataset.grade;
+    if (!grade) return;
+    if (grade === 'ok') {
+      setMemorised(setup.surah, verse().number, true);
+      toast(t('hifz.markedDone'));
+      if (state.index < verses.length - 1) { state.index++; state.rep = 1; load(); } else renderVerse();
+    } else {
+      state.rep = 1;
+      load();
+      play();
+    }
+  };
+
+  let session = null;
+  function finish() {
+    if (!session) return;
+    const { recognition, timers, heard } = session;
+    session = null;
+    timers.forEach(clearTimeout);
+    try { recognition.abort(); } catch { /* already stopped */ }
+    setReciteLabel('hifz.recite', false);
+    heard.trim() ? showResult(heard) : selfCheck('hifz.noSpeech');
+  }
+
+  reciteBtn.onclick = () => {
+    if (session) { finish(); return; } // second tap = "I'm done"
     pause();
-    if (!Recognition) {
-      state.mode = 'show';
-      $$('#modes .chip').forEach((c) => c.classList.toggle('on', c.dataset.mode === 'show'));
-      renderVerse();
-      toast(t('hifz.noMic'));
+    if (!Recognition) { selfCheck('hifz.noMic'); return; }
+
+    const recognition = new Recognition();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    session = { recognition, timers: [], heard: '' };
+    const current = session;
+    const restartSilenceTimer = () => {
+      clearTimeout(current.silence);
+      current.silence = setTimeout(finish, 2500);
+      current.timers.push(current.silence);
+    };
+
+    recognition.onresult = (e) => {
+      if (session !== current) return;
+      current.heard = [...e.results].map((r) => r[0].transcript).join(' ');
+      // live feedback while reciting
+      const words = verse().text.split(/\s+/).filter((w) => plain(w).length);
+      const result = compare(verse().text, current.heard);
+      $('#verse').innerHTML = words.map((w, i) => (result[i] ? `<span class="said">${esc(w)}</span>` : '<span class="hidden-word">' + esc(w) + '</span>')).join(' ');
+      restartSilenceTimer();
+    };
+    recognition.onerror = (e) => {
+      if (session !== current) return;
+      const key = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'hifz.micBlocked'
+        : e.error === 'no-speech' ? 'hifz.noSpeech' : 'hifz.micError';
+      const { timers } = current;
+      session = null;
+      timers.forEach(clearTimeout);
+      setReciteLabel('hifz.recite', false);
+      current.heard.trim() ? showResult(current.heard) : selfCheck(key);
+    };
+    recognition.onend = () => { if (session === current) finish(); };
+
+    try {
+      recognition.start();
+    } catch {
+      session = null;
+      selfCheck('hifz.micError');
       return;
     }
-    listening?.abort();
-    listening = new Recognition();
-    listening.lang = 'ar-SA';
-    listening.interimResults = false;
-    listening.maxAlternatives = 3;
-    $('#recite').classList.add('listening');
-    $('#recite').innerHTML = `${ICON.mic} ${t('hifz.listening')}`;
-    listening.onresult = (e) => {
-      const heard = [...e.results[0]].map((alt) => alt.transcript).join(' ');
-      const result = compare(verse().text, heard);
-      const words = verse().text.split(/\s+/).filter((w) => plain(w).length);
-      const score = result.filter(Boolean).length / result.length;
-      $('#verse').innerHTML = words.map((w, i) => `<span class="${result[i] ? 'said' : 'missed'}">${esc(w)}</span>`).join(' ');
-      $('#check').hidden = false;
-      $('#check').textContent = t(score >= 0.85 ? 'hifz.great' : score >= 0.5 ? 'hifz.almost' : 'hifz.tryAgain', { pct: Math.round(score * 100) });
-      if (score >= 0.85) {
-        setMemorised(setup.surah, verse().number, true);
-        $('#markDone').innerHTML = `${ICON.check} ${t('hifz.memorised')}`;
-        $('#markDone').classList.add('done');
-      }
-    };
-    listening.onerror = () => toast(t('hifz.micError'));
-    listening.onend = () => {
-      $('#recite').classList.remove('listening');
-      $('#recite').innerHTML = `${ICON.mic} ${t('hifz.recite')}`;
-    };
-    listening.start();
+    setReciteLabel('hifz.listeningTapToStop', true);
+    // Hard limits: never stay "listening" (iOS sometimes sends neither results nor an end event).
+    current.timers.push(setTimeout(() => { if (session === current && !current.heard) finish(); }, 8000));
+    current.timers.push(setTimeout(() => { if (session === current) finish(); }, 20000));
   };
+  onCleanup(() => { if (session) { session.timers.forEach(clearTimeout); try { session.recognition.abort(); } catch { /* noop */ } session = null; } });
 
   load();
 }

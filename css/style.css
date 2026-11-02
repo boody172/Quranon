@@ -218,6 +218,8 @@ h2 { font-size: 18px; margin: 0; }
 .said { color: var(--success); }
 .missed { color: var(--danger); text-decoration: underline wavy color-mix(in srgb, var(--danger) 50%, transparent); }
 .hifz-check { margin: 12px 0 0; font: 600 15px var(--font); color: var(--text-2); direction: rtl; }
+.self-check { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.self-check .pill { height: 44px; font-size: 15px; }
 .hifz-status { text-align: center; color: var(--muted); font-size: 14px; margin: 0; }
 .hifz-controls { justify-content: center; gap: 22px; margin: 14px 0; }
 .hifz-actions .pill { flex: 1; }

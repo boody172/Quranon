@@ -203,7 +203,7 @@
   "hifz.memorised": "Memorised",
   "hifz.change": "Change surah or passage",
   "hifz.finished": "Passage complete. Well done — may Allah make it firm in your heart.",
-  "hifz.noMic": "Your device can't check recitation. Recite from memory, then compare with the text.",
+  "hifz.noMic": "Voice checking isn't available on this device. Recite from memory, then compare with the text:",
   "hifz.micError": "We couldn't hear you. Allow the microphone and try again.",
   "hifz.great": "Excellent! {pct}% of the words were right — added to your memorised verses.",
   "hifz.almost": "Very close: {pct}%. Review the words in red.",
@@ -218,5 +218,11 @@
   "account.deleteHint": "Your account and saved items will be permanently removed from our servers. This can't be undone.",
   "account.deleteConfirm": "Delete my account permanently",
   "account.deleted": "Your account has been deleted",
-  "account.privacy": "Privacy policy"
+  "account.privacy": "Privacy policy",
+  "hifz.listeningTapToStop": "Listening… tap when done",
+  "hifz.noSpeech": "We didn't hear you. Compare with the text:",
+  "hifz.micBlocked": "Microphone or dictation is off for this browser. On iPhone: Settings → General → Keyboard → Enable Dictation. Or compare with the text:",
+  "hifz.gotIt": "I got it right",
+  "hifz.again": "Repeat it",
+  "hifz.markedDone": "Added to your memorised verses"
 }
