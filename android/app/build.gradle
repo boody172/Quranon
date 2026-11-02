@@ -4,6 +4,8 @@ android {
     namespace "app.quranon"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
+        // AdMob app ID (AdMob → Apps → App settings). This is Google's TEST id: replace it before publishing.
+        manifestPlaceholders = [admobAppId: "ca-app-pub-3940256099942544~3347511713"]
         applicationId "app.quranon"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -36,6 +38,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation "com.google.android.gms:play-services-ads:$playServicesAdsVersion" // AppOpenAdPlugin
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

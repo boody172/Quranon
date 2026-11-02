@@ -132,4 +132,30 @@ class ContentManagementTest extends TestCase
         $this->post('/admin/scholars', $base + ['lessons_source' => 'archive', 'lessons_ref' => '../../etc/passwd'])->assertSessionHasErrors('lessons_ref');
         $this->post('/admin/scholars', $base + ['lessons_source' => 'manual', 'lessons_text' => 'no links here'])->assertSessionHasErrors('lessons_text');
     }
+
+    public function test_admin_switches_to_ads_and_sets_ad_units(): void
+    {
+        $this->getJson('/api/config')->assertJsonPath('monetization', 'ads')
+            ->assertJsonPath('ads.appOpen.ios', 'ca-app-pub-3940256099942544/5575463023'); // Google test unit by default
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin)->put('/admin/settings/monetization', [
+            'monetization' => 'ads', 'android_unit' => 'ca-app-pub-1234567890123456/1111111111', 'ios_unit' => '',
+            'every_hours' => 6, 'skip_first_launches' => 2,
+        ])->assertRedirect();
+
+        $this->getJson('/api/config')
+            ->assertJsonPath('ads.appOpen.android', 'ca-app-pub-1234567890123456/1111111111')
+            ->assertJsonPath('ads.appOpen.ios', 'ca-app-pub-3940256099942544/5575463023')
+            ->assertJsonPath('ads.everyHours', 6);
+
+        $this->actingAs($admin)->put('/admin/settings/monetization', [
+            'monetization' => 'plus', 'android_unit' => 'not-an-ad-unit', 'every_hours' => 6, 'skip_first_launches' => 1,
+        ])->assertSessionHasErrors('android_unit');
+        $this->actingAs($admin)->put('/admin/settings/monetization', [
+            'monetization' => 'plus', 'every_hours' => 6, 'skip_first_launches' => 1,
+        ]);
+        $this->getJson('/api/config')->assertJsonPath('monetization', 'plus');
+        $this->actingAs($admin)->get('/admin/settings')->assertOk()->assertSee('الربح والإعلانات');
+    }
 }

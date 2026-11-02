@@ -27,6 +27,15 @@ class SettingsController extends Controller
         'quran_com' => ['label' => 'Quran.com API (مجاني)', 'url' => 'https://api.quran.com/api/v4'],
     ];
 
+    public const MONETIZATION = ['ads' => 'مجاني بإعلان عند الفتح (بدون اشتراك)', 'plus' => 'بدون إعلانات + اشتراك بلس اختياري', 'none' => 'مجاني بالكامل بلا إعلانات ولا اشتراك'];
+
+    /** Google's test ad units: they always show a sample ad and never pay. */
+    public const ADS_DEFAULTS = [
+        'appOpen' => ['android' => 'ca-app-pub-3940256099942544/9257395921', 'ios' => 'ca-app-pub-3940256099942544/5575463023'],
+        'everyHours' => 4,
+        'skipFirstLaunches' => 1,
+    ];
+
     public function edit(): View
     {
         return view('admin.settings', [
@@ -35,6 +44,8 @@ class SettingsController extends Controller
             'release' => Setting::get('release', ['version' => 0, 'notes' => []]),
             'secrets' => collect(self::SECRETS)->map(fn ($label, $key) => ['label' => $label, 'saved' => Setting::has($key)]),
             'paypalMode' => Setting::get('payments.paypal.mode', 'sandbox'),
+            'monetization' => Setting::get('monetization', 'ads'),
+            'ads' => array_replace_recursive(self::ADS_DEFAULTS, Setting::get('ads', [])),
             'languages' => Language::activeCodes(),
         ]);
     }
@@ -85,6 +96,31 @@ class SettingsController extends Controller
         AppConfig::flush();
 
         return back()->with('status', 'تم حفظ مفاتيح الدفع بشكل مشفّر.');
+    }
+
+    public function updateMonetization(Request $request): RedirectResponse
+    {
+        $unit = ['nullable', 'string', 'regex:/^ca-app-pub-\d{16}\/\d{10}$/'];
+        $data = $request->validate([
+            'monetization' => ['required', Rule::in(array_keys(self::MONETIZATION))],
+            'android_unit' => $unit,
+            'ios_unit' => $unit,
+            'every_hours' => ['required', 'integer', 'between:1,72'],
+            'skip_first_launches' => ['required', 'integer', 'between:0,20'],
+        ]);
+
+        Setting::put('monetization', $data['monetization']);
+        Setting::put('ads', [
+            'appOpen' => [
+                'android' => $data['android_unit'] ?: self::ADS_DEFAULTS['appOpen']['android'],
+                'ios' => $data['ios_unit'] ?: self::ADS_DEFAULTS['appOpen']['ios'],
+            ],
+            'everyHours' => (int) $data['every_hours'],
+            'skipFirstLaunches' => (int) $data['skip_first_launches'],
+        ]);
+        AppConfig::flush();
+
+        return back()->with('status', 'تم حفظ إعدادات الربح والإعلانات. تصل للتطبيقات خلال دقيقة.');
     }
 
     /** Bumps the release version: every open app shows "a new update is ready". */

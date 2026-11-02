@@ -1,4 +1,5 @@
 // Smaller screens: radio, lessons, search, saved items, account, qibla page.
+import { monetization } from '../ads.js';
 import { account, saved } from '../account.js';
 import { SOURCES } from '../api.js';
 import { countryName, getLessonParts, loadRadios, loadReciters, loadScholars, loadTafsir, reciterLine, scholarLessons, surahKey, surahMeta, surahTitle } from '../catalog.js';
@@ -205,8 +206,8 @@ export async function accountView(view) {
       <section class="hello"><p>${t('account.yours')}</p><h1>${esc(t('greet.named', { name: account.firstName() }))}</h1></section>
       <div class="list">
         <a class="row" href="#/saved"><span class="disc">${ICON.heart}</span><span class="meta"><b>${t('page.saved')}</b><small>${t('saved.count', { n: saved.all().length })}</small></span></a>
-        <a class="row" href="#/plus"><span class="disc">${ICON.star}</span><span class="meta"><b>${t('plus.title')}</b>
-          <small>${plusUntil ? esc(t('account.plusActive', { date: new Date(plusUntil).toLocaleDateString(i18n.lang === 'ar' ? 'ar-EG' : i18n.lang) })) : t('plus.subtitle')}</small></span></a>
+        ${monetization() === 'plus' ? `<a class="row" href="#/plus"><span class="disc">${ICON.star}</span><span class="meta"><b>${t('plus.title')}</b>
+          <small>${plusUntil ? esc(t('account.plusActive', { date: new Date(plusUntil).toLocaleDateString(i18n.lang === 'ar' ? 'ar-EG' : i18n.lang) })) : t('plus.subtitle')}</small></span></a>` : ''}
       </div>
       <p class="muted small">${t('account.synced')}</p>
       <button class="pill wide" id="logout">${t('account.logout')}</button>

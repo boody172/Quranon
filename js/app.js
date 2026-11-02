@@ -13,6 +13,7 @@ import { hifz } from './views/hifz.js';
 import { plus } from './views/plus.js';
 import { circle, circles } from './views/circles.js';
 import { initCarPlay, refreshCarPlay } from './carplay.js';
+import { initAds, monetization } from './ads.js';
 
 const ROUTES = {
   home: { view: home },
@@ -49,7 +50,8 @@ function setTitle(text) {
 }
 
 async function route() {
-  const { name, args } = parseHash();
+  let { name, args } = parseHash();
+  if (name === 'plus' && monetization() !== 'plus') { name = 'home'; args = []; } // free with ads: no subscription
   const def = ROUTES[name];
   cleanups.forEach((fn) => fn());
   cleanups = [];
@@ -156,6 +158,7 @@ addEventListener('hashchange', route);
 route();
 checkRelease(config);
 initCarPlay();
+initAds();
 
 // Content published while the app was open still reaches the user on their next screen.
 (window.requestIdleCallback || ((fn) => setTimeout(fn, 1200)))(async () => {

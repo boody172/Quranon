@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Controllers\Admin\SettingsController;
 use App\Models\Feature;
 use App\Models\Language;
 use App\Models\PaymentMethod;
@@ -35,6 +36,8 @@ class AppConfig
                 ->filter(fn (PaymentMethod $m) => $m->isReady(app(GatewayManager::class)))
                 ->map->toAppArray()->values(),
             'plus_perks' => Setting::get('plus_perks'),
+            'monetization' => Setting::get('monetization', 'ads'),
+            'ads' => array_replace_recursive(SettingsController::ADS_DEFAULTS, Setting::get('ads', [])),
         ])->toArray());
     }
 

@@ -1,0 +1,4 @@
+# app-ads.txt — proves to ad buyers that Quranon's ads are sold by you.
+# After creating your AdMob account, replace the line below with the one AdMob shows you
+# (AdMob → Apps → View all apps → app-ads.txt), e.g.:
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

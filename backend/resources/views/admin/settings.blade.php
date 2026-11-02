@@ -16,6 +16,32 @@
 </section>
 
 <section class="panel">
+    <h2>الربح والإعلانات</h2>
+    <p class="muted">الإعلان يظهر في تطبيقات المتاجر فقط (الموقع بدون إعلانات): إعلان «فتح التطبيق» من جوجل، مسبوق برسالة اعتذار قصيرة، لا يظهر أبداً أثناء التلاوة أو الحفظ، ومحتواه عائلي فقط.
+        أرقام الوحدات من AdMob ← Apps ← تطبيقك ← Ad units ← App open. اتركها فارغة لاستخدام وحدات جوجل التجريبية.</p>
+    <form method="post" action="{{ route('admin.settings.monetization') }}" class="form">
+        @csrf @method('put')
+        <label class="field">
+            <span class="label">طريقة الربح</span>
+            <select name="monetization">
+                @foreach (\App\Http\Controllers\Admin\SettingsController::MONETIZATION as $key => $label)
+                    <option value="{{ $key }}" @selected($monetization === $key)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </label>
+        <div class="grid">
+            @include('admin.partials.field', ['name' => 'android_unit', 'label' => 'وحدة App open — أندرويد', 'value' => str_starts_with($ads['appOpen']['android'], 'ca-app-pub-3940256099942544') ? '' : $ads['appOpen']['android'], 'attrs' => 'dir="ltr" placeholder="ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx"'])
+            @include('admin.partials.field', ['name' => 'ios_unit', 'label' => 'وحدة App open — آيفون', 'value' => str_starts_with($ads['appOpen']['ios'], 'ca-app-pub-3940256099942544') ? '' : $ads['appOpen']['ios'], 'attrs' => 'dir="ltr" placeholder="ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx"'])
+        </div>
+        <div class="grid">
+            @include('admin.partials.field', ['name' => 'every_hours', 'label' => 'إعلان واحد كل (ساعات)', 'type' => 'number', 'value' => $ads['everyHours'], 'attrs' => 'required min="1" max="72"'])
+            @include('admin.partials.field', ['name' => 'skip_first_launches', 'label' => 'بدون إعلان في أول (مرات فتح)', 'type' => 'number', 'value' => $ads['skipFirstLaunches'], 'attrs' => 'required min="0" max="20"'])
+        </div>
+        <button class="btn">حفظ</button>
+    </form>
+</section>
+
+<section class="panel">
     <h2>مصادر البيانات (API)</h2>
     <p class="muted">كلها مجانية. يمكنك التبديل لمزوّد آخر أو لنسخة احتياطية (mirror) في أي وقت دون تحديث التطبيق.</p>
     <form method="post" action="{{ route('admin.settings.sources') }}" class="form">

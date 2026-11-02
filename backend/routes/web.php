@@ -33,6 +33,7 @@ Route::prefix(config('quranon.admin_path'))->name('admin.')->middleware(Restrict
         Route::get('settings', [Admin\SettingsController::class, 'edit'])->name('settings');
         Route::put('settings/sources', [Admin\SettingsController::class, 'updateSources'])->name('settings.sources');
         Route::put('settings/perks', [Admin\SettingsController::class, 'updatePerks'])->name('settings.perks');
+        Route::put('settings/monetization', [Admin\SettingsController::class, 'updateMonetization'])->name('settings.monetization');
         Route::put('settings/payments', [Admin\SettingsController::class, 'updatePayments'])->name('settings.payments');
         Route::post('settings/publish', [Admin\SettingsController::class, 'publish'])->name('settings.publish');
 

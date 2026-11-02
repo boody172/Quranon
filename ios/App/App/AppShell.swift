@@ -18,5 +18,6 @@ final class AppShell {
 class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(CarPlayPlugin.shared)
+        bridge?.registerPluginInstance(AppOpenAdPlugin())
     }
 }
