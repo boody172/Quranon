@@ -34,17 +34,19 @@ export const RECITER_TAGS = [
 // القراء المميزين في الصفحة الرئيسية (عمالقة دولة التلاوة)
 export const FEATURED_KEYS = ['عبدالباسط', 'المنشاوي', 'الحصري', 'مصطفياسماعيل', 'محمدرفعت', 'البنا', 'السديس', 'المعيقلي', 'العفاسي', 'الدوسري'];
 
-// Fallback scholars (the dashboard overrides these once the backend is connected).
+// Default scholars and where their audio lessons come from (the dashboard can change all of this).
+// source: 'islamhouse' → IslamHouse author id · 'archive' → Internet Archive item identifier.
 export const SCHOLARS = [
-  { ar: ['الشيخ محمد متولي الشعراوي', 'خواطر حول القرآن الكريم'], en: ['Sheikh Muhammad Metwally Al-Shaarawy', 'Reflections on the Quran'], country: 'eg', late: true },
-  { ar: ['الشيخ محمد حسان', 'دروس ومحاضرات'], en: ['Sheikh Muhammad Hassan', 'Lessons and lectures'], country: 'eg' },
-  { ar: ['د. عمر عبد الكافي', 'دروس في السيرة والتزكية'], en: ['Dr. Omar Abdelkafy', 'Seerah and self-purification'], country: 'eg' },
-  { ar: ['د. مصطفى حسني', 'معاني الآيات والتزكية'], en: ['Dr. Mustafa Hosny', 'Meanings of the verses'], country: 'eg' },
-  { ar: ['الشيخ محمد بن صالح العثيمين', 'تفسير وشروح'], en: ['Sheikh Muhammad ibn Salih Al-Uthaymeen', 'Tafsir and commentary'], country: 'sa', late: true },
-  { ar: ['الشيخ عبد العزيز بن باز', 'فتاوى ودروس'], en: ['Sheikh Abdulaziz ibn Baz', 'Fatwas and lessons'], country: 'sa', late: true },
-  { ar: ['الشيخ صالح المغامسي', 'تأملات قرآنية'], en: ['Sheikh Saleh Al-Maghamsi', 'Quranic reflections'], country: 'sa' },
-  { ar: ['الشيخ عثمان الخميس', 'تفسير ودروس'], en: ['Sheikh Othman Al-Khamees', 'Tafsir and lessons'], country: 'kw' },
-  { ar: ['د. محمد راتب النابلسي', 'تفسير وإعجاز'], en: ['Dr. Mohammed Rateb Al-Nabulsi', 'Tafsir and the miracles of the Quran'], country: 'sy' },
+  { ar: ['الشيخ محمد متولي الشعراوي', 'خواطر حول القرآن الكريم'], en: ['Sheikh Muhammad Metwally Al-Shaarawy', 'Reflections on the Quran'], country: 'eg', late: true, source: 'archive', ref: 'Islamic_Tape-233_uP_bY_mUSLEm' },
+  { ar: ['الشيخ محمد حسان', 'محاضرات ودروس'], en: ['Sheikh Muhammad Hassan', 'Lectures and lessons'], country: 'eg', source: 'archive', ref: 'mohamed-hassan-mp3' },
+  { ar: ['د. عمر عبد الكافي', 'دروس ومحاضرات'], en: ['Dr. Omar Abdelkafy', 'Lessons and lectures'], country: 'eg', source: 'archive', ref: 'mawsoa-mp3_Omar-abdlkafee' },
+  { ar: ['د. مصطفى حسني', 'رسالة من الله'], en: ['Dr. Mustafa Hosny', 'A Message from Allah'], country: 'eg', source: 'archive', ref: 'Resala.Hosny' },
+  { ar: ['الشيخ محمد بن صالح العثيمين', 'تفسير وشروح'], en: ['Sheikh Muhammad ibn Salih Al-Uthaymeen', 'Tafsir and commentary'], country: 'sa', late: true, source: 'islamhouse', ref: '6842' },
+  { ar: ['الشيخ عبد العزيز بن باز', 'فتاوى ودروس'], en: ['Sheikh Abdulaziz ibn Baz', 'Fatwas and lessons'], country: 'sa', late: true, source: 'islamhouse', ref: '6865' },
+  { ar: ['الشيخ عبد الرزاق البدر', 'دروس ومواعظ'], en: ['Sheikh Abdul-Razzaq Al-Badr', 'Lessons and reminders'], country: 'sa', source: 'islamhouse', ref: '7737' },
+  { ar: ['الشيخ صالح المغامسي', 'محاضرات ودروس'], en: ['Sheikh Saleh Al-Maghamsi', 'Lectures and lessons'], country: 'sa', source: 'archive', ref: 'Dourous-saleh-mghamsi-upByMuslem' },
+  { ar: ['الشيخ عثمان الخميس', 'قصص الأنبياء'], en: ['Sheikh Othman Al-Khamees', 'Stories of the Prophets'], country: 'kw', source: 'archive', ref: 'Prophets_stories-othman_khamis_up_by_muslem' },
+  { ar: ['د. محمد راتب النابلسي', 'تفسير القرآن الكريم'], en: ['Dr. Mohammed Rateb Al-Nabulsi', 'Tafsir of the Quran'], country: 'sy', source: 'archive', ref: 'Tasfeer-Nabulsi' },
 ];
 export const LESSON_COUNTRIES = ['eg', 'sa', 'kw', 'sy'];
 

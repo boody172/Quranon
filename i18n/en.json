@@ -158,5 +158,10 @@
   "plus.failed": "The payment wasn't completed. You can try again.",
   "plus.home": "Back to home",
   "qibla.touchToStart": "Touch the screen once to start the compass",
-  "qibla.waiting": "The arrow points to the qibla from north — move your phone"
+  "qibla.waiting": "The arrow points to the qibla from north — move your phone",
+  "lessons.playAll": "Play lessons in order",
+  "lessons.more": "Show more",
+  "lessons.none": "No lessons for this scholar yet.",
+  "lessons.unavailable": "Couldn't load the lessons right now. Please try again.",
+  "lessons.notFound": "We couldn't find this scholar."
 }

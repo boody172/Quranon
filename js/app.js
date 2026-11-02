@@ -8,7 +8,7 @@ import { $, clearCachedData, esc, ICON, store } from './util.js';
 import home from './views/home.js';
 import { listen, reciter } from './views/listen.js';
 import { mushaf, surah } from './views/mushaf.js';
-import { accountView, lessons, qiblaView, radio, savedView, search } from './views/more.js';
+import { accountView, lessons, qiblaView, radio, savedView, scholarView, search } from './views/more.js';
 import { plus } from './views/plus.js';
 
 const ROUTES = {
@@ -19,6 +19,7 @@ const ROUTES = {
   surah: { view: surah, parent: '#/mushaf' },
   radio: { view: radio, title: 'page.radio' },
   lessons: { view: lessons, title: 'page.lessons' },
+  scholar: { view: scholarView, parent: '#/lessons' },
   qibla: { view: qiblaView, title: 'page.qibla' },
   search: { view: search, title: 'page.search' },
   saved: { view: savedView, title: 'page.saved' },

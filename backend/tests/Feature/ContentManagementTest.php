@@ -71,6 +71,7 @@ class ContentManagementTest extends TestCase
     {
         $this->put('/admin/settings/sources', [
             'audio_api' => 'https://mirror.example.com/api/v3', 'text_provider' => 'quran_com', 'text_api' => 'https://api.quran.com/api/v4',
+            'islamhouse_api' => 'https://api3.islamhouse.com/v3/key',
         ])->assertRedirect();
 
         $this->getJson('/api/config')
@@ -80,7 +81,7 @@ class ContentManagementTest extends TestCase
 
     public function test_data_sources_must_be_https(): void
     {
-        $this->put('/admin/settings/sources', ['audio_api' => 'http://insecure.example.com', 'text_provider' => 'alquran_cloud', 'text_api' => 'https://api.alquran.cloud/v1'])
+        $this->put('/admin/settings/sources', ['audio_api' => 'http://insecure.example.com', 'text_provider' => 'alquran_cloud', 'text_api' => 'https://api.alquran.cloud/v1', 'islamhouse_api' => 'https://x.test'])
             ->assertSessionHasErrors('audio_api');
     }
 
@@ -99,5 +100,36 @@ class ContentManagementTest extends TestCase
         $this->put('/admin/settings/perks', ['perks' => ['ar' => "ميزة أولى\n\nميزة ثانية ", 'en' => '']])->assertSessionHasNoErrors();
 
         $this->getJson('/api/config')->assertJsonPath('plus_perks', ['ar' => ['ميزة أولى', 'ميزة ثانية']]);
+    }
+
+    public function test_scholars_expose_their_lesson_source_to_the_app(): void
+    {
+        $scholars = collect($this->getJson('/api/config')->json('scholars'));
+
+        $this->assertSame(['source' => 'islamhouse', 'ref' => '6842'], collect($scholars->firstWhere('name.ar', 'الشيخ محمد بن صالح العثيمين'))->only('source', 'ref')->all());
+        $this->assertSame('archive', $scholars->firstWhere('name.ar', 'الشيخ محمد متولي الشعراوي')['source']);
+    }
+
+    public function test_admin_adds_a_scholar_with_hand_picked_audio_lessons(): void
+    {
+        $this->post('/admin/scholars', [
+            'name' => ['ar' => 'شيخ تجربة', 'en' => 'Test Sheikh'], 'topic' => ['ar' => 'دروس', 'en' => 'Lessons'],
+            'country' => 'eg', 'sort' => 50, 'is_active' => '1', 'lessons_source' => 'manual',
+            'lessons_text' => "الدرس الأول | https://cdn.example.com/1.mp3\nسطر غير صالح\nدرس | http://insecure.example.com/2.mp3\nالدرس الثاني | https://cdn.example.com/2.mp3",
+        ])->assertRedirect('/admin/scholars');
+
+        $scholar = collect($this->getJson('/api/config')->json('scholars'))->firstWhere('name.en', 'Test Sheikh');
+        $this->assertSame([
+            ['title' => 'الدرس الأول', 'url' => 'https://cdn.example.com/1.mp3'],
+            ['title' => 'الدرس الثاني', 'url' => 'https://cdn.example.com/2.mp3'],
+        ], $scholar['lessons']);
+    }
+
+    public function test_lesson_source_reference_is_validated(): void
+    {
+        $base = ['name' => ['ar' => 'x', 'en' => 'x'], 'topic' => ['ar' => 'x', 'en' => 'x'], 'country' => 'eg', 'sort' => 1];
+
+        $this->post('/admin/scholars', $base + ['lessons_source' => 'archive', 'lessons_ref' => '../../etc/passwd'])->assertSessionHasErrors('lessons_ref');
+        $this->post('/admin/scholars', $base + ['lessons_source' => 'manual', 'lessons_text' => 'no links here'])->assertSessionHasErrors('lessons_text');
     }
 }

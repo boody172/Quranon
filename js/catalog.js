@@ -91,9 +91,47 @@ export async function loadScholars() {
   }
   return SCHOLARS.map((s, i) => {
     const [name, topic] = s[i18n.lang] || s.en;
-    return { id: i, name, topic, country: s.country, late: Boolean(s.late), photo: null,
-      url: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(`${s.ar[0]} ${s.ar[1]}`) };
+    return { id: i + 1, name, topic, country: s.country, late: Boolean(s.late), photo: null, source: s.source, ref: s.ref, lessons: null };
   });
+}
+
+// ---------- audio lessons ----------
+// Every source is normalised to lessons of the shape { key, title, parts: [{ url }] | null }.
+// IslamHouse lists lessons first and resolves their audio files on demand (getLessonParts).
+const LESSON_PAGE = 30;
+const audioFile = /\.(mp3|m4a|ogg)$/i;
+const naturalOrder = (a, b) => a.localeCompare(b, 'ar', { numeric: true });
+
+async function archiveLessons(identifier) {
+  const meta = await cachedJSON(`${SOURCES.archive}/metadata/${encodeURIComponent(identifier)}`, { key: 'ia-' + identifier, maxAgeHours: 24 * 7 });
+  return (meta.files || [])
+    .filter((f) => f.source === 'original' && audioFile.test(f.name))
+    .sort((a, b) => naturalOrder(a.name, b.name))
+    .map((f) => ({
+      key: f.name,
+      title: f.title || f.name.split('/').pop().replace(audioFile, '').replace(/[_-]+/g, ' ').trim(),
+      parts: [{ url: `${SOURCES.archive}/download/${encodeURIComponent(identifier)}/${f.name.split('/').map(encodeURIComponent).join('/')}` }],
+    }));
+}
+
+/** One page of a scholar's lessons: { lessons, more }. */
+export async function scholarLessons(scholar, page = 1) {
+  if (scholar.source === 'islamhouse') {
+    const url = `${SOURCES.islamhouse}/main/get-author-items/${encodeURIComponent(scholar.ref)}/audios/ar/ar/${page}/${LESSON_PAGE}/json`;
+    const { data = [] } = await cachedJSON(url, { key: `ih-${scholar.ref}-${page}`, maxAgeHours: 24 });
+    return { lessons: data.map((d) => ({ key: String(d.id), title: d.title, parts: null })), more: data.length === LESSON_PAGE };
+  }
+  const all = scholar.source === 'archive' ? await archiveLessons(scholar.ref) : (scholar.lessons || []).map((l, i) => ({ key: String(i), title: l.title, parts: [{ url: l.url }] }));
+  const start = (page - 1) * LESSON_PAGE;
+  return { lessons: all.slice(start, start + LESSON_PAGE), more: all.length > start + LESSON_PAGE };
+}
+
+/** Audio files of one lesson, in order. */
+export async function getLessonParts(lesson) {
+  if (lesson.parts) return lesson.parts;
+  const item = await cachedJSON(`${SOURCES.islamhouse}/main/get-item/${encodeURIComponent(lesson.key)}/ar/json`, { key: 'ih-item-' + lesson.key, maxAgeHours: 24 * 30 });
+  lesson.parts = (item.attachments || []).filter((a) => audioFile.test(a.url || '')).map((a) => ({ url: a.url }));
+  return lesson.parts;
 }
 
 export const loadRadios = () =>

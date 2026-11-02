@@ -1,6 +1,6 @@
 // Service worker: app shell works offline; Quran text is cached after first read;
 // catalogue APIs use stale-while-revalidate. Audio is streamed, never cached here.
-const VERSION = 'v8';
+const VERSION = 'v9';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [

@@ -32,6 +32,7 @@
             </label>
             @include('admin.partials.field', ['name' => 'text_api', 'label' => 'رابط المزوّد', 'type' => 'url', 'value' => $sources['text_api'], 'attrs' => 'required dir="ltr" data-provider-url'])
         </div>
+        @include('admin.partials.field', ['name' => 'islamhouse_api', 'label' => 'الدروس الصوتية (IslamHouse)', 'type' => 'url', 'value' => $sources['islamhouse_api'], 'attrs' => 'required dir="ltr"'])
         <button class="btn">حفظ المصادر</button>
     </form>
 </section>

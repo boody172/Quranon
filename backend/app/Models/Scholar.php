@@ -9,16 +9,23 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'topic', 'country', 'is_late', 'url', 'photo_path', 'sort', 'is_active'])]
+#[Fillable(['name', 'topic', 'country', 'is_late', 'lessons_source', 'lessons_ref', 'lessons', 'photo_path', 'sort', 'is_active'])]
 class Scholar extends Model
 {
     use FlushesAppConfig, HasPublicImage;
+
+    public const SOURCES = [
+        'islamhouse' => 'IslamHouse (رقم الشيخ)',
+        'archive' => 'Internet Archive (معرّف المجموعة)',
+        'manual' => 'روابط صوتية أضيفها بنفسي',
+    ];
 
     protected function casts(): array
     {
         return [
             'name' => 'array',
             'topic' => 'array',
+            'lessons' => 'array',
             'country' => Country::class,
             'is_late' => 'boolean',
             'is_active' => 'boolean',
@@ -44,7 +51,9 @@ class Scholar extends Model
             'topic' => $this->topic,
             'country' => $this->country->value,
             'late' => $this->is_late,
-            'url' => $this->url,
+            'source' => $this->lessons_source,
+            'ref' => $this->lessons_ref,
+            'lessons' => $this->lessons_source === 'manual' ? ($this->lessons ?? []) : null,
             'photo' => $this->imageUrl($this->photo_path),
         ];
     }

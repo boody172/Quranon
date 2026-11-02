@@ -1,7 +1,7 @@
 // Smaller screens: radio, lessons, search, saved items, account, qibla page.
 import { account, saved } from '../account.js';
 import { SOURCES } from '../api.js';
-import { countryName, loadRadios, loadReciters, loadScholars, loadTafsir, reciterLine, surahKey, surahMeta, surahTitle } from '../catalog.js';
+import { countryName, getLessonParts, loadRadios, loadReciters, loadScholars, loadTafsir, reciterLine, scholarLessons, surahKey, surahMeta, surahTitle } from '../catalog.js';
 import { LESSON_COUNTRIES, SURAHS } from '../data.js';
 import { i18n, num, t } from '../i18n.js';
 import { markPlaying, player } from '../player.js';
@@ -39,9 +39,9 @@ export async function lessons(view) {
   const draw = () => {
     const list = scholars.filter((s) => lessonCountry === 'all' || s.country === lessonCountry);
     $('#scholars').innerHTML = list.map((s) => `
-      <a class="row" href="${esc(s.url || '#')}" target="_blank" rel="noopener">${avatar(s.name, s.photo)}
+      <a class="row" href="#/scholar/${encodeURIComponent(s.id)}">${avatar(s.name, s.photo)}
         <span class="meta"><b>${esc(s.name)}</b><small>${esc([s.topic, countryName(s.country), s.late ? t('common.late') : ''].filter(Boolean).join(' · '))}</small></span>
-        <span class="trail">${ICON.external}</span></a>`).join('') || `<p class="empty">${t('lessons.noScholars')}</p>`;
+        <span class="trail">${ICON.headset}</span></a>`).join('') || `<p class="empty">${t('lessons.noScholars')}</p>`;
   };
   draw();
   $('#lc').onclick = (e) => {
@@ -84,6 +84,68 @@ export async function search(view) {
         <a class="row" href="#/reciter/${r.id}">${avatar(r.name, r.photo)}<span class="meta"><b>${esc(r.name)}</b><small>${esc(reciterLine(r))}</small></span></a>`).join('')}</div>` : '')
       || `<p class="empty">${t('common.noResults')}</p>`;
   });
+}
+
+/** A scholar's audio lessons, played inside the app in order. */
+export async function scholarView(view, { args: [id], setTitle }) {
+  view.innerHTML = '<div class="list">' + '<div class="skeleton"></div>'.repeat(8) + '</div>';
+  const scholar = (await loadScholars()).find((s) => String(s.id) === String(id));
+  if (!scholar) { view.innerHTML = `<p class="empty">${t('lessons.notFound')}</p>`; return; }
+  setTitle(scholar.name);
+
+  const lessons = [];
+  let page = 0;
+  let more = true;
+  const sub = scholar.name;
+
+  view.innerHTML = `
+    <header class="profile">${avatar(scholar.name, scholar.photo, 88)}
+      <div><h1>${esc(scholar.name)}</h1><p class="muted">${esc([scholar.topic, countryName(scholar.country), scholar.late ? t('common.late') : ''].filter(Boolean).join(' · '))}</p></div></header>
+    <div class="actions"><button class="pill primary" id="playAll" disabled>${ICON.play} ${t('lessons.playAll')}</button></div>
+    <div class="list" id="lessonList">${'<div class="skeleton"></div>'.repeat(6)}</div>
+    <button class="pill wide" id="moreLessons" hidden>${t('lessons.more')}</button>`;
+
+  const row = (lesson, i) => `<button class="row" data-i="${i}">
+    <span class="num">${num(i + 1)}</span><span class="meta"><b>${esc(lesson.title)}</b></span>${ICON.play}</button>`;
+
+  const loadPage = async () => {
+    $('#moreLessons').disabled = true;
+    const result = await scholarLessons(scholar, ++page);
+    lessons.push(...result.lessons);
+    more = result.more;
+    $('#lessonList').innerHTML = lessons.length ? lessons.map(row).join('') : `<p class="empty">${t('lessons.none')}</p>`;
+    $('#moreLessons').hidden = !more;
+    $('#moreLessons').disabled = false;
+    $('#playAll').disabled = !lessons.length;
+    markPlaying();
+  };
+
+  // A lesson can have several audio files; each becomes one queue entry, in order.
+  const queueFrom = async (from, count) => {
+    const chosen = lessons.slice(from, from + count);
+    const parts = await Promise.all(chosen.map((l) => getLessonParts(l).catch(() => [])));
+    return chosen.flatMap((lesson, i) => parts[i].map((p, n) => ({
+      title: parts[i].length > 1 ? `${lesson.title} (${num(n + 1)})` : lesson.title,
+      sub,
+      url: p.url,
+    })));
+  };
+
+  const play = async (from) => {
+    const queue = await queueFrom(from, 25);
+    if (!queue.length) { toast(t('lessons.unavailable')); return; }
+    player.play(queue, 0);
+  };
+
+  $('#lessonList').onclick = (e) => { const r = e.target.closest('[data-i]'); if (r) play(Number(r.dataset.i)); };
+  $('#playAll').onclick = () => play(0);
+  $('#moreLessons').onclick = loadPage;
+
+  try {
+    await loadPage();
+  } catch {
+    $('#lessonList').innerHTML = `<p class="empty">${t('lessons.unavailable')}</p>`;
+  }
 }
 
 const SAVED_GROUPS = [

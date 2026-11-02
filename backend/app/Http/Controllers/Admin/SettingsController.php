@@ -45,6 +45,7 @@ class SettingsController extends Controller
             'audio_api' => ['required', 'url:https', 'max:255'],
             'text_provider' => ['required', Rule::in(array_keys(self::TEXT_PROVIDERS))],
             'text_api' => ['required', 'url:https', 'max:255'],
+            'islamhouse_api' => ['required', 'url:https', 'max:255'],
         ]);
 
         Setting::put('sources', $data);

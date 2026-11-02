@@ -27,7 +27,33 @@
         </label>
         @include('admin.partials.field', ['name' => 'sort', 'label' => 'الترتيب', 'type' => 'number', 'value' => $scholar->sort, 'attrs' => 'min="0" max="999" required'])
     </div>
-    @include('admin.partials.field', ['name' => 'url', 'label' => 'رابط الدروس', 'type' => 'url', 'value' => $scholar->url, 'attrs' => 'dir="ltr" placeholder="https://"', 'hint' => 'قناة يوتيوب أو قائمة تشغيل'])
+    <fieldset class="field">
+        <legend class="label">مصدر الدروس الصوتية (تُشغَّل داخل التطبيق بالترتيب)</legend>
+        <select name="lessons_source" data-lesson-source>
+            @foreach (\App\Models\Scholar::SOURCES as $key => $label)
+                <option value="{{ $key }}" @selected(old('lessons_source', $scholar->lessons_source ?? 'islamhouse') === $key)>{{ $label }}</option>
+            @endforeach
+        </select>
+    </fieldset>
+    <div data-source-panel="ref">
+        @include('admin.partials.field', ['name' => 'lessons_ref', 'label' => 'رقم الشيخ أو معرّف المجموعة', 'value' => $scholar->lessons_ref, 'attrs' => 'dir="ltr"',
+            'hint' => 'IslamHouse: الرقم في رابط صفحة الشيخ (مثال 6842). Internet Archive: الجزء بعد /details/ في الرابط.'])
+    </div>
+    <label class="field" data-source-panel="manual">
+        <span class="label">الدروس — درس في كل سطر</span>
+        <textarea name="lessons_text" rows="6" dir="auto" placeholder="الدرس الأول | https://example.com/lesson-1.mp3">{{ old('lessons_text', collect($scholar->lessons ?? [])->map(fn ($l) => $l['title'].' | '.$l['url'])->implode("\n")) }}</textarea>
+        @error('lessons_text')<span class="error">{{ $message }}</span>@enderror
+    </label>
+    <script nonce="{{ $cspNonce }}">
+        (() => {
+            const select = document.querySelector('[data-lesson-source]');
+            const sync = () => document.querySelectorAll('[data-source-panel]').forEach((el) => {
+                el.hidden = (el.dataset.sourcePanel === 'manual') !== (select.value === 'manual');
+            });
+            select.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
     @include('admin.partials.image-field', ['name' => 'photo', 'label' => 'الصورة', 'current' => $scholar->imageUrl($scholar->photo_path)])
 
     <label class="check"><input type="checkbox" name="is_late" value="1" @checked(old('is_late', $scholar->is_late))> متوفى</label>

@@ -18,5 +18,6 @@ return [
         'audio_api' => 'https://mp3quran.net/api/v3',
         'text_api' => 'https://api.alquran.cloud/v1',
         'text_provider' => 'alquran_cloud',
+        'islamhouse_api' => 'https://api3.islamhouse.com/v3/paV29H2gm56kvLPy',
     ],
 ];

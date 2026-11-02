@@ -12,6 +12,8 @@ export const SOURCES = {
   audio: 'https://mp3quran.net/api/v3',
   text: 'https://api.alquran.cloud/v1',
   textProvider: 'alquran_cloud', // alquran_cloud | quran_com
+  islamhouse: 'https://api3.islamhouse.com/v3/paV29H2gm56kvLPy', // public API key published by IslamHouse
+  archive: 'https://archive.org',
   app: CONFIG.apiBase.replace(/\/$/, ''),
 };
 
@@ -20,6 +22,7 @@ export function applySources(sources) {
   if (sources.audio_api) SOURCES.audio = sources.audio_api.replace(/\/$/, '');
   if (sources.text_api) SOURCES.text = sources.text_api.replace(/\/$/, '');
   if (sources.text_provider) SOURCES.textProvider = sources.text_provider;
+  if (sources.islamhouse_api) SOURCES.islamhouse = sources.islamhouse_api.replace(/\/$/, '');
 }
 
 const memory = new Map();
