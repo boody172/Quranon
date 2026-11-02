@@ -1,12 +1,12 @@
 // Service worker: app shell works offline; Quran text is cached after first read;
 // catalogue APIs use stale-while-revalidate. Audio is streamed, never cached here.
-const VERSION = 'v12';
+const VERSION = 'v13';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [
   './', 'index.html', 'manifest.json', 'icons/icon.svg', 'css/fonts.css', 'css/style.css',
   'js/app.js', 'js/util.js', 'js/config.js', 'js/api.js', 'js/catalog.js', 'js/account.js', 'js/player.js',
-  'js/qibla.js', 'js/art.js', 'js/data.js', 'js/views/home.js', 'js/views/listen.js', 'js/views/mushaf.js', 'js/views/more.js',
+  'js/qibla.js', 'js/art.js', 'js/data.js', 'js/views/home.js', 'js/views/listen.js', 'js/views/mushaf.js', 'js/views/more.js', 'js/views/hifz.js', 'js/views/plus.js', 'js/i18n.js',
   'fonts/plex-ar-400.woff2', 'fonts/plex-ar-500.woff2', 'fonts/plex-ar-600.woff2',
   'fonts/alexandria-ar-500.woff2', 'fonts/alexandria-ar-700.woff2', 'fonts/amiri-quran.woff2',
 ];

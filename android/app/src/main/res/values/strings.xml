@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Quranon</string>
+    <string name="title_activity_main">Quranon</string>
+    <string name="package_name">app.quranon</string>
+    <string name="custom_url_scheme">app.quranon</string>
+</resources>

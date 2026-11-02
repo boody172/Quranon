@@ -18,13 +18,45 @@ export const Qibla = (() => {
   // Only iOS Safari gates the compass behind a gesture (some desktop browsers expose the API without needing it).
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const needsIOSPermission = () => isIOS && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
-  const haptic = p => { try { navigator.vibrate && navigator.vibrate(p); } catch { } };
+  // Native app: real haptics (works on iPhone too); browser: vibration API where supported.
+  const haptic = (pattern) => {
+    const native = window.Capacitor?.Plugins?.Haptics;
+    if (native) { native.impact({ style: Array.isArray(pattern) ? 'MEDIUM' : 'LIGHT' }).catch(() => {}); return; }
+    try { navigator.vibrate?.(pattern); } catch { /* unsupported */ }
+  };
+
+  // Location without a permission prompt: GPS only if the user already allowed it,
+  // otherwise the network location (city level, well under 1° of qibla error), then the time zone.
+  const ZONES = {
+    'Africa/Cairo': [30.04, 31.24], 'Asia/Riyadh': [24.71, 46.68], 'Asia/Kuwait': [29.38, 47.99], 'Asia/Dubai': [25.2, 55.27],
+    'Asia/Qatar': [25.29, 51.53], 'Asia/Bahrain': [26.23, 50.59], 'Asia/Muscat': [23.59, 58.41], 'Asia/Amman': [31.95, 35.93],
+    'Asia/Baghdad': [33.31, 44.37], 'Asia/Damascus': [33.51, 36.29], 'Asia/Beirut': [33.89, 35.5], 'Asia/Gaza': [31.5, 34.47],
+    'Asia/Hebron': [31.53, 35.1], 'Africa/Khartoum': [15.5, 32.56], 'Africa/Tripoli': [32.89, 13.19], 'Africa/Tunis': [36.81, 10.18],
+    'Africa/Algiers': [36.75, 3.06], 'Africa/Casablanca': [33.57, -7.59], 'Asia/Aden': [12.79, 45.04], 'Europe/Istanbul': [41.01, 28.98],
+    'Europe/London': [51.51, -0.13], 'Europe/Paris': [48.86, 2.35], 'Europe/Berlin': [52.52, 13.4], 'America/New_York': [40.71, -74.01],
+    'Asia/Karachi': [24.86, 67.0], 'Asia/Jakarta': [-6.21, 106.85], 'Asia/Kuala_Lumpur': [3.14, 101.69],
+  };
+  const fresh = (loc) => loc && Date.now() - (loc.t || 0) < 864e5;
+  const remember = (la, lo, src) => { const loc = { la, lo, src, t: Date.now() }; store.set('loc', loc); return loc; };
 
   async function locate() {
+    const saved = store.get('loc');
     try {
-      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 6e5 }));
-      const loc = { la: pos.coords.latitude, lo: pos.coords.longitude }; store.set('loc', loc); return loc;
-    } catch { return store.get('loc'); }
+      if ((await navigator.permissions?.query({ name: 'geolocation' }))?.state === 'granted') {
+        const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, maximumAge: 6e5 }));
+        return remember(pos.coords.latitude, pos.coords.longitude, 'gps');
+      }
+    } catch { /* fall through */ }
+    if (fresh(saved)) return saved;
+    try {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 5000);
+      const geo = await (await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: ctrl.signal })).json();
+      if (geo.latitude && geo.longitude) return remember(+geo.latitude, +geo.longitude, 'network');
+    } catch { /* fall through */ }
+    if (saved) return saved;
+    const zone = ZONES[Intl.DateTimeFormat().resolvedOptions().timeZone];
+    return zone ? remember(zone[0], zone[1], 'zone') : null;
   }
 
   // Starts the compass; calls cb({ state, heading, bearing, diff, locked, dist }). Returns a stop function.

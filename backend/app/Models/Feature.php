@@ -21,6 +21,7 @@ class Feature extends Model
         'radio' => 'برج بث',
         'lessons' => 'مسجد',
         'fav' => 'قلب',
+        'hifz' => 'حفظ (مصحف وعلامات صح)',
         'kahf' => 'كهف وهلال',
         'search' => 'بحث',
     ];

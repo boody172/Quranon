@@ -1,5 +1,6 @@
 // Audio player: queue, mini bar, full sheet, lock-screen controls, sleep timer, resume.
-import { surahName } from './catalog.js';
+import { saved } from './account.js';
+import { recordKhatma, surahName } from './catalog.js';
 import { t } from './i18n.js';
 import { $, $$, formatTime, ICON, store, toast } from './util.js';
 
@@ -40,6 +41,7 @@ export const player = {
       if (err?.name !== 'AbortError') toast(`${t('player.cantPlay')} (${err?.name || 'Error'})`);
     });
     if (!item.live) store.set('last', state.refill ? { queue: [item], index: 0 } : { queue, index });
+    if (item.khatma) recordKhatma(item, false);
     $('#miniPlayer').hidden = false;
     render();
     mediaSession(item);
@@ -55,6 +57,8 @@ export const player = {
       if (position < audio.duration - 3) audio.currentTime = position;
     }, { once: true });
   },
+
+  pause() { audio.pause(); },
 
   toggle() {
     if (current()) audio.paused ? audio.play().catch(() => {}) : audio.pause();
@@ -89,10 +93,31 @@ function render() {
   $('#miniSub').textContent = $('#pSub').textContent = item.sub;
   $('#artSurah').textContent = item.surah ? surahName(item.surah) : item.live ? t('player.live') : '';
   $('#pRead').hidden = !item.surah;
+  renderFavorite(item);
   $('#seek').disabled = Boolean(item.live);
   $('#miniPlay').innerHTML = $('#pPlay').innerHTML = audio.paused ? ICON.play : ICON.pause;
   $('#pRepeat').innerHTML = ICON.repeat + (state.repeat === 'one' ? '<b class="badge">1</b>' : '');
   $('#pRepeat').classList.toggle('on', state.repeat !== 'off');
+}
+
+/** Heart for whatever is playing: the reciter, the radio station or the scholar. */
+function renderFavorite(item) {
+  const fav = item.fav;
+  const on = Boolean(fav && saved.has(fav.type, fav.ref));
+  $('#miniFav').hidden = $('#pFav').hidden = !fav;
+  $('#miniFav').innerHTML = on ? ICON.heartFilled : ICON.heart;
+  $('#miniFav').classList.toggle('on', on);
+  $('#miniFav').setAttribute('aria-pressed', on);
+  $('#pFav').innerHTML = `${on ? ICON.heartFilled : ICON.heart} ${fav ? fav.title : ''}`;
+  $('#pFav').classList.toggle('on', on);
+}
+
+function toggleFavorite() {
+  const fav = current()?.fav;
+  if (!fav) return;
+  const now = saved.toggle(fav);
+  toast(t(now ? 'toast.saved' : 'toast.removed'));
+  renderFavorite(current());
 }
 
 function mediaSession(item) {
@@ -138,7 +163,10 @@ function cycleRepeat() {
 // --- wiring ---
 audio.addEventListener('play', render);
 audio.addEventListener('pause', render);
-audio.addEventListener('ended', () => player.next(true));
+audio.addEventListener('ended', () => {
+  if (current()?.khatma) recordKhatma(current(), true);
+  player.next(true);
+});
 audio.addEventListener('error', () => {
   if (audio.getAttribute('src')) toast(`${t('player.cantLoad')} (${audio.error?.code ?? '?'})`);
 });
@@ -170,6 +198,7 @@ $('#pNext').onclick = () => player.next();
 $('#pPrev').onclick = () => player.prev();
 $('#pRepeat').onclick = cycleRepeat;
 $('#pSleep').onclick = cycleSleepTimer;
+$('#miniFav').onclick = $('#pFav').onclick = toggleFavorite;
 $('#pRead').onclick = () => { player.closeSheet(); location.hash = '#/surah/' + current().surah; };
 $('#miniOpen').onclick = openSheet;
 $('#sheetClose').onclick = () => player.closeSheet();

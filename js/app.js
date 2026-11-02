@@ -9,6 +9,7 @@ import home from './views/home.js';
 import { listen, reciter } from './views/listen.js';
 import { mushaf, surah } from './views/mushaf.js';
 import { accountView, lessons, qiblaView, radio, savedView, scholarView, search } from './views/more.js';
+import { hifz } from './views/hifz.js';
 import { plus } from './views/plus.js';
 
 const ROUTES = {
@@ -25,6 +26,7 @@ const ROUTES = {
   saved: { view: savedView, title: 'page.saved' },
   account: { view: accountView, title: 'page.account' },
   plus: { view: plus, title: 'page.plus' },
+  hifz: { view: hifz, title: 'page.hifz' },
 };
 
 const view = $('#view');

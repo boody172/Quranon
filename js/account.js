@@ -35,6 +35,13 @@ export const account = {
     store.set('user', user);
     return user;
   },
+  /** Permanently deletes the account on the server, then signs out locally. */
+  async deleteAccount(password) {
+    await appRequest('me', { method: 'DELETE', body: { password }, token: session.token });
+    session.user = session.token = null;
+    store.remove('user');
+    store.remove('token');
+  },
   async logout() {
     appRequest('logout', { method: 'POST', token: session.token }).catch(() => {});
     session.user = session.token = null;

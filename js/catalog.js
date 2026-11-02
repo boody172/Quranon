@@ -2,7 +2,7 @@
 import { appConfig, cachedJSON, SOURCES } from './api.js';
 import { FEATURED_KEYS, RECITER_TAGS, SCHOLARS, SURAHS } from './data.js';
 import { i18n, pick, t } from './i18n.js';
-import { norm, pad3 } from './util.js';
+import { norm, pad3, store, toast } from './util.js';
 
 // ---------- surahs ----------
 export const surahName = (n) => (i18n.lang === 'ar' ? SURAHS[n - 1].name : SURAHS[n - 1].en);
@@ -80,7 +80,8 @@ export function reciterLine(r) {
 /** Player queue for one recitation (moshaf) of a reciter. */
 export function surahQueue(reciter, moshaf) {
   const sub = reciter.name + (reciter.moshaf.length > 1 ? ` — ${moshaf.name}` : '');
-  return surahNumbers(moshaf).map((n) => ({ title: surahTitle(n), sub, url: moshaf.server + pad3(n) + '.mp3', surah: n }));
+  const fav = { type: 'reciter', ref: String(reciter.id), title: reciter.name, subtitle: reciterLine(reciter) };
+  return surahNumbers(moshaf).map((n) => ({ title: surahTitle(n), sub, url: moshaf.server + pad3(n) + '.mp3', surah: n, fav }));
 }
 
 // ---------- shuffle ----------
@@ -93,24 +94,49 @@ function shuffled(list) {
   return a;
 }
 
-/**
- * Endless shuffle of one reciter: every surah plays once in random order,
- * then a fresh shuffle starts (never the same surah twice in a row).
- */
-export function reciterShuffle(reciter, moshaf) {
-  const all = surahQueue(reciter, moshaf);
-  let bag = [];
-  let last = null;
+// ---------- random khatma ----------
+// Every surah once, in a random order, until the whole Quran is complete; progress survives restarts.
+const khatmaKey = (reciter, moshaf) => `khatma:${reciter.id}:${moshaf.id}`;
+
+function khatmaItems(reciter, moshaf, plan, from) {
+  const bySurah = new Map(surahQueue(reciter, moshaf).map((item) => [item.surah, item]));
+  const key = khatmaKey(reciter, moshaf);
+  return plan.order.slice(from).map((n, i) => ({
+    ...bySurah.get(n),
+    khatma: { key, order: plan.order, pos: from + i, done: plan.done, reciter: reciter.name },
+  }));
+}
+
+export function khatmaProgress(reciter, moshaf) {
+  const plan = store.get(khatmaKey(reciter, moshaf));
+  return { heard: plan?.pos || 0, total: surahNumbers(moshaf).length, done: plan?.done || 0 };
+}
+
+export function randomKhatma(reciter, moshaf) {
+  const available = surahNumbers(moshaf);
+  let plan = store.get(khatmaKey(reciter, moshaf));
+  if (!plan || plan.pos >= plan.order.length || plan.order.length !== available.length) {
+    plan = { order: shuffled(available), pos: 0, done: plan?.done || 0 };
+  }
+  // When this khatma is about to end, line up the next one (it is only saved once it starts playing).
+  let next = plan;
   const refill = () => {
-    if (!bag.length) {
-      bag = shuffled(all);
-      if (bag.length > 1 && bag[0].url === last) bag.push(bag.shift());
-    }
-    const batch = bag.splice(0, 10);
-    last = batch[batch.length - 1]?.url;
-    return batch;
+    next = { order: shuffled(available), pos: 0, done: next.done + 1 };
+    return khatmaItems(reciter, moshaf, next, 0);
   };
-  return { queue: refill(), refill };
+  return { queue: khatmaItems(reciter, moshaf, plan, plan.pos), refill };
+}
+
+/**
+ * Called by the player when a khatma surah starts (finished = false) and when it ends (finished = true).
+ * A surah only counts as heard once it has played to the end, so closing the app mid-surah never skips it.
+ */
+export function recordKhatma(item, finished) {
+  const { key, order, pos, done, reciter } = item.khatma;
+  const next = finished ? pos + 1 : pos;
+  const completed = next === order.length;
+  store.set(key, { order, pos: next, done: completed ? done + 1 : done });
+  if (completed) toast(t('khatma.completed', { name: reciter }));
 }
 
 /**
@@ -121,11 +147,10 @@ export function mixedShuffle(reciters, { pool = null } = {}) {
   const candidates = (pool?.length ? pool : reciters).filter((r) => r.moshaf?.length);
   const recent = [];
   const pickOne = () => {
-    let r;
-    for (let tries = 0; tries < 8; tries++) {
-      r = candidates[Math.floor(Math.random() * candidates.length)];
-      if (!recent.includes(r.id) || candidates.length <= recent.length) break;
-    }
+    // Choose only among reciters not heard recently (a back-to-back repeat is impossible).
+    const fresh = candidates.filter((c) => !recent.includes(c.id));
+    const pool = fresh.length ? fresh : candidates.filter((c) => c.id !== recent[recent.length - 1]);
+    const r = (pool.length ? pool : candidates)[Math.floor(Math.random() * (pool.length || candidates.length))];
     recent.push(r.id);
     if (recent.length > Math.min(5, candidates.length - 1)) recent.shift();
     const moshaf = r.moshaf[Math.floor(Math.random() * r.moshaf.length)];

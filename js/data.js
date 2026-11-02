@@ -32,7 +32,7 @@ export const RECITER_TAGS = [
 ];
 
 // القراء المميزين في الصفحة الرئيسية (عمالقة دولة التلاوة)
-export const FEATURED_KEYS = ['عبدالباسط', 'المنشاوي', 'الحصري', 'مصطفياسماعيل', 'محمدرفعت', 'البنا', 'السديس', 'المعيقلي', 'العفاسي', 'الدوسري'];
+export const FEATURED_KEYS = ['عبدالباسط', 'المنشاوي', 'الحصري', 'مصطفياسماعيل', 'محمدرفعت', 'البنا', 'الطبلاوي', 'الدوسري', 'السديس', 'الشريم', 'المعيقلي', 'العفاسي', 'الغامدي', 'العجمي', 'القطامي', 'بصفر', 'الجهني', 'الحذيفي', 'محمدايوب', 'بليله'];
 
 // Default scholars and where their audio lessons come from (the dashboard can change all of this).
 // source: 'islamhouse' → IslamHouse author id · 'archive' → Internet Archive item identifier.
@@ -47,6 +47,13 @@ export const SCHOLARS = [
   { ar: ['الشيخ صالح المغامسي', 'محاضرات ودروس'], en: ['Sheikh Saleh Al-Maghamsi', 'Lectures and lessons'], country: 'sa', source: 'archive', ref: 'Dourous-saleh-mghamsi-upByMuslem' },
   { ar: ['الشيخ عثمان الخميس', 'قصص الأنبياء'], en: ['Sheikh Othman Al-Khamees', 'Stories of the Prophets'], country: 'kw', source: 'archive', ref: 'Prophets_stories-othman_khamis_up_by_muslem' },
   { ar: ['د. محمد راتب النابلسي', 'تفسير القرآن الكريم'], en: ['Dr. Mohammed Rateb Al-Nabulsi', 'Tafsir of the Quran'], country: 'sy', source: 'archive', ref: 'Tasfeer-Nabulsi' },
+  // Imams of the two Holy Mosques — sermons and lessons.
+  { ar: ['الشيخ عبد الرحمن السديس', 'خطب ودروس الحرم المكي'], en: ['Sheikh Abdul-Rahman Al-Sudais', 'Sermons from Masjid al-Haram'], country: 'sa', source: 'islamhouse', ref: '8474' },
+  { ar: ['الشيخ سعود الشريم', 'خطب ودروس الحرم المكي'], en: ['Sheikh Saud Al-Shuraim', 'Sermons from Masjid al-Haram'], country: 'sa', source: 'islamhouse', ref: '8603' },
+  { ar: ['الشيخ علي الحذيفي', 'خطب المسجد النبوي'], en: ['Sheikh Ali Al-Hudhaify', 'Sermons from the Prophet’s Mosque'], country: 'sa', source: 'islamhouse', ref: '56685' },
+  { ar: ['الشيخ صلاح البدير', 'خطب المسجد النبوي'], en: ['Sheikh Salah Al-Budair', 'Sermons from the Prophet’s Mosque'], country: 'sa', source: 'islamhouse', ref: '56690' },
+  { ar: ['الشيخ عبد الباري الثبيتي', 'خطب المسجد النبوي'], en: ['Sheikh Abdul-Bari Al-Thubaiti', 'Sermons from the Prophet’s Mosque'], country: 'sa', source: 'islamhouse', ref: '8602' },
+  { ar: ['الشيخ عبد المحسن القاسم', 'خطب المسجد النبوي'], en: ['Sheikh Abdul-Muhsin Al-Qasim', 'Sermons from the Prophet’s Mosque'], country: 'sa', source: 'islamhouse', ref: '8316' },
 ];
 export const LESSON_COUNTRIES = ['eg', 'sa', 'kw', 'sy'];
 

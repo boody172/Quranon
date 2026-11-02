@@ -196,6 +196,49 @@ h2 { font-size: 18px; margin: 0; }
 .rtile b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.4; }
 .rtile small { color: var(--muted); font-size: 12px; }
 
+/* ---------- account ---------- */
+.danger-zone { margin-top: 18px; padding: 12px 16px; border-radius: 16px; border: 1px solid #f3d2d0; background: #fff8f7; }
+.danger-zone summary { cursor: pointer; color: var(--danger); font-weight: 600; }
+.pill.danger { background: var(--danger); color: #fff; border: 0; }
+.link-inline { color: var(--accent); font-weight: 600; }
+
+/* ---------- hifz ---------- */
+.hifz-setup .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hifz-setup .select { margin: 0; font-weight: 400; }
+.hifz-setup fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+.hifz-setup .segmented { margin: 0; }
+.hifz-head { text-align: center; margin: 4px 0 10px; }
+.hifz-head p { margin: 2px 0 0; }
+.hifz-modes { justify-content: center; }
+.hifz-card { margin: 6px 0 10px; padding: 24px 18px; min-height: 160px; display: grid; place-items: center; text-align: center; border-radius: 24px; background: #fffdf7; border: 1px solid #efe5cc; }
+.hifz-verse { margin: 0; font: 30px/2.1 var(--quran); color: #1c2420; }
+.hifz-verse .m { color: var(--gold); font-size: .8em; }
+.hidden-word { color: transparent; background: #efe6cf; border-radius: 6px; cursor: pointer; transition: color .2s, background .2s; }
+.hidden-word.revealed { color: inherit; background: transparent; }
+.said { color: var(--success); }
+.missed { color: var(--danger); text-decoration: underline wavy color-mix(in srgb, var(--danger) 50%, transparent); }
+.hifz-check { margin: 12px 0 0; font: 600 15px var(--font); color: var(--text-2); direction: rtl; }
+.hifz-status { text-align: center; color: var(--muted); font-size: 14px; margin: 0; }
+.hifz-controls { justify-content: center; gap: 22px; margin: 14px 0; }
+.hifz-actions .pill { flex: 1; }
+.pill.listening { color: var(--danger); border-color: var(--danger); animation: pulse 1.2s infinite; }
+#markDone.done { color: var(--success); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+
+/* ---------- alphabetical index ---------- */
+.letters { position: sticky; top: calc(var(--top-h) + env(safe-area-inset-top)); z-index: 6; display: flex; gap: 4px; overflow-x: auto; margin: 0 -16px 8px; padding: 6px 16px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); scrollbar-width: none; }
+.letters:empty { display: none; }
+.letters::-webkit-scrollbar { display: none; }
+.letters button { flex: none; min-width: 34px; height: 34px; border-radius: 10px; font: 600 15px var(--display); color: var(--accent-strong); background: var(--surface); border: 1px solid var(--border); }
+.letter { margin: 14px 4px 2px; font: 700 15px var(--display); color: var(--accent); scroll-margin-top: calc(var(--top-h) + 56px); }
+.letter:first-child { margin-top: 0; }
+
+/* ---------- random khatma ---------- */
+.khatma { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 12px; margin: -4px 0 16px; }
+.khatma-bar { grid-column: 1 / -1; height: 6px; border-radius: 9px; background: var(--surface-2); overflow: hidden; }
+.khatma-bar i { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--accent), #3fb68f); transition: width .4s var(--ease); }
+.khatma p { margin: 0; font-size: 13.5px; color: var(--text-2); }
+.khatma .chip { height: 34px; font-size: 13.5px; }
+
 /* ---------- shuffle ---------- */
 .shuffle-card { display: flex; align-items: center; gap: 14px; padding: 14px 14px 14px 16px; margin-bottom: 6px; border-radius: 20px; background: linear-gradient(150deg, var(--accent-soft), #fff); border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent); }
 .shuffle-card .meta { flex: 1; min-width: 0; }
@@ -322,6 +365,11 @@ h2 { font-size: 18px; margin: 0; }
 .mini-text b { font-weight: 600; }
 .mini-text small { color: var(--muted); font-size: 12.5px; }
 .mini-player .icon-btn.play { width: 52px; height: 52px; }
+.icon-btn.fav { border: 0; box-shadow: none; background: transparent; color: var(--muted); }
+.icon-btn.fav.on, .fav-pill.on { color: var(--danger); }
+.sheet-actions { gap: 8px; flex-wrap: wrap; }
+.fav-pill { max-width: 100%; }
+button.meta { text-align: start; }
 .mini-progress { position: absolute; inset: auto 0 0; height: 3px; background: var(--surface-2); }
 .mini-progress i { display: block; height: 100%; background: var(--accent); transform-origin: right; transform: scaleX(0); }
 [dir=ltr] .mini-progress i { transform-origin: left; }

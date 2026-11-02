@@ -1,0 +1,21 @@
+{
+  "name": "quranon",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Quranon — Quran listening, reading, memorisation and qibla.",
+  "scripts": {
+    "build": "node scripts/build-web.mjs",
+    "cap:sync": "npm run build && npx cap sync",
+    "android": "npm run cap:sync && npx cap open android",
+    "ios": "npm run cap:sync && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/ios": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

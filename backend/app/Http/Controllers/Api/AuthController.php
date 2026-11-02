@@ -40,6 +40,22 @@ class AuthController extends Controller
         return response()->json(['user' => $this->present($request->user())]);
     }
 
+    /** Permanently deletes the account and everything tied to it (App Store guideline 5.1.1(v)). */
+    public function destroy(Request $request): JsonResponse
+    {
+        $request->validate(['password' => ['required', 'string']]);
+        $user = $request->user();
+
+        if (! Hash::check($request->input('password'), $user->password)) {
+            throw ValidationException::withMessages(['password' => 'كلمة المرور غير صحيحة.']);
+        }
+
+        $user->tokens()->delete();
+        $user->delete(); // saved items cascade; orders are kept anonymised for accounting
+
+        return response()->json(status: 204);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();

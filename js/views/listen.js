@@ -1,5 +1,5 @@
 import { saved } from '../account.js';
-import { countryName, featuredReciters, findReciter, loadReciters, mixedShuffle, reciterLine, reciterShuffle, surahKey, surahMeta, surahName, surahQueue } from '../catalog.js';
+import { countryName, featuredReciters, findReciter, khatmaProgress, loadReciters, mixedShuffle, randomKhatma, reciterLine, surahKey, surahMeta, surahName, surahQueue } from '../catalog.js';
 import { num, t } from '../i18n.js';
 import { markPlaying, player } from '../player.js';
 import { $, $$, avatar, esc, ICON, norm, toast } from '../util.js';
@@ -13,6 +13,17 @@ const reciterRow = (r) => `<a class="row" href="#/reciter/${r.id}">${avatar(r.na
 
 const reciterTile = (r) => `<a class="rtile" href="#/reciter/${r.id}">${avatar(r.name, r.photo, 76)}
   <b>${esc(r.name)}</b><small>${esc(r.late ? t('common.late') : countryName(r.country))}</small></a>`;
+
+/** Alphabetical sections; Arabic letter variants (أ إ آ) share one heading. */
+function groupByLetter(list) {
+  const groups = new Map();
+  for (const r of list) {
+    const letter = (r.name.trim()[0] || '#').replace(/[أإآٱ]/, 'ا').toUpperCase();
+    if (!groups.has(letter)) groups.set(letter, []);
+    groups.get(letter).push(r);
+  }
+  return [...groups];
+}
 
 function matches(r, q) {
   if (q && !r.key.includes(q)) return false;
@@ -38,9 +49,14 @@ export async function listen(view, { args: [filter] }) {
     <button class="link small" id="mixSaved" hidden>${t('shuffle.fromSaved')}</button>
     <section id="featured" hidden><h2 class="section">${t('listen.featured')}</h2><div class="hscroll"></div></section>
     <h2 class="section">${t('listen.all')} <small class="muted" id="count"></small></h2>
+    <nav class="letters" id="letters" aria-label="${t('listen.az')}"></nav>
     <div class="list" id="rlist">${'<div class="skeleton"></div>'.repeat(8)}</div>`;
 
   const list = await loadReciters();
+  $('#letters').onclick = (e) => {
+    const b = e.target.closest('[data-l]');
+    if (b) $('#letter-' + b.dataset.l)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const savedReciters = list.filter((r) => saved.has('reciter', r.id));
   $('#mixSaved').hidden = savedReciters.length < 2;
   $('#mixAll').onclick = () => {
@@ -58,8 +74,10 @@ export async function listen(view, { args: [filter] }) {
     const q = norm(filterState.query);
     const results = list.filter((r) => matches(r, q));
     $('#count').textContent = `(${num(results.length)})`;
+    const groups = groupByLetter(results);
+    $('#letters').innerHTML = q || groups.length < 4 ? '' : groups.map(([letter], i) => `<button data-l="${i}">${esc(letter)}</button>`).join('');
     $('#rlist').innerHTML = results.length
-      ? results.map(reciterRow).join('')
+      ? groups.map(([letter, rows], i) => `<h3 class="letter" id="letter-${i}">${esc(letter)}</h3>${rows.map(reciterRow).join('')}`).join('')
       : `<p class="empty">${filterState.id === 'saved' ? t('listen.emptySaved') : t('common.noResults')}</p>`;
 
     const showFeatured = filterState.id === 'all' && !q;
@@ -94,13 +112,18 @@ export async function reciter(view, { args: [id], setTitle }) {
     const moshaf = r.moshaf[moshafIndex];
     const queue = surahQueue(r, moshaf);
     const isSaved = saved.has('reciter', r.id);
+    const progress = khatmaProgress(r, moshaf);
     view.innerHTML = `
       <header class="profile">${avatar(r.name, r.photo, 88)}
         <div><h1>${esc(r.name)}</h1><p class="muted">${esc(reciterLine(r))}</p></div></header>
       <div class="actions">
-        <button class="pill primary" id="playAll">${ICON.play} ${t('reciter.playAll')}</button>
-        <button class="pill icon shuffle" id="shuffle" aria-label="${t('reciter.shuffle')}" title="${t('reciter.shuffle')}">${ICON.shuffle}</button>
+        <button class="pill primary" id="playKhatma">${ICON.play} ${t(progress.heard ? 'khatma.continue' : 'khatma.play')}</button>
         <button class="pill icon${isSaved ? ' saved' : ''}" id="save" aria-pressed="${isSaved}" aria-label="${t('reciter.save')}">${isSaved ? ICON.heartFilled : ICON.heart}</button>
+      </div>
+      <div class="khatma">
+        <div class="khatma-bar"><i style="width:${(progress.heard / progress.total) * 100}%"></i></div>
+        <p>${t('khatma.progress', { heard: progress.heard, total: progress.total })}${progress.done ? ' · ' + t('khatma.done', { n: progress.done }) : ''}</p>
+        <button class="chip" id="playAll">${t('khatma.inOrder')}</button>
       </div>
       ${r.moshaf.length > 1
         ? `<select class="select" id="moshaf" aria-label="${t('reciter.recitation')}">${r.moshaf.map((m, i) => `<option value="${i}"${i === moshafIndex ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select>`
@@ -113,10 +136,10 @@ export async function reciter(view, { args: [id], setTitle }) {
 
     markPlaying();
     $('#playAll').onclick = () => player.play(queue, 0);
-    $('#shuffle').onclick = () => {
-      const mix = reciterShuffle(r, moshaf);
-      player.play(mix.queue, 0, { refill: mix.refill });
-      toast(t('shuffle.started'));
+    $('#playKhatma').onclick = () => {
+      const khatma = randomKhatma(r, moshaf);
+      player.play(khatma.queue, 0, { refill: khatma.refill });
+      toast(t('khatma.started'));
     };
     $('#save').onclick = () => {
       const now = saved.toggle({ type: 'reciter', ref: r.id, title: r.name, subtitle: reciterLine(r) });

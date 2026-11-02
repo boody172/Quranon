@@ -15,6 +15,8 @@ ART.fav = `<svg viewBox="0 0 200 140"><path d="M100 128S38 92 30 56a34 34 0 0 1 
   <path d="M100 108S60 84 54 62a20 20 0 0 1 46-12 20 20 0 0 1 46 12c-6 22-46 46-46 46z" opacity=".45"/><path class="w1" d="M160 18v14M153 25h14M38 104v10M33 109h10"/></svg>`;
 ART.kahf = `<svg viewBox="0 0 200 140"><path d="M20 132c10-60 40-104 80-104s70 44 80 104"/><path d="M62 132c4-34 18-58 38-58s34 24 38 58" opacity=".7"/>
   <path d="M10 132h180"/><path d="M146 22a14 14 0 1 0 12 20 11 11 0 1 1-12-20z"/><path class="w1" d="M54 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path class="w2" d="M128 54l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/></svg>`;
+ART.hifz = `<svg viewBox="0 0 200 140"><path d="M100 48c-14-10-34-12-56-12v74c22 0 42 2 56 12 14-10 34-12 56-12V36c-22 0-42 2-56 12zM100 48v74"/>
+  <path d="M58 56h28M58 68h28M58 80h20" opacity=".5"/><path class="w1" d="M118 60l8 8 16-18"/><path class="w2" d="M118 86l8 8 16-18"/><path d="M100 22v-8M86 26l-4-6M114 26l4-6" opacity=".6"/></svg>`;
 ART.search = `<svg viewBox="0 0 200 140"><path d="M26 30h70M26 46h56M26 62h64M26 78h40M26 94h52" opacity=".45"/><circle cx="122" cy="62" r="38"/><path d="M150 90l32 32"/>
   <path class="w1" d="M106 50a20 20 0 0 1 22-6"/></svg>`;
 // Used when the backend is not reachable. Mirrors database/seeders/FeatureSeeder.php.
@@ -25,6 +27,7 @@ export const DEFAULT_FEATURES = [
   f('mushaf', ['المصحف', 'اقرأ بالرسم العثماني'], ['Mushaf', 'Read in the Uthmani script'], '#/mushaf', 'mushaf', '#f6ecd6', '#8c6118'),
   f('radio', ['الإذاعات', 'بث مباشر طوال اليوم'], ['Radio', 'Live, all day long'], '#/radio', 'radio', '#fbe6dc', '#b4501f'),
   f('lessons', ['دروس', 'تفسير وتدبّر من علماء موثوقين'], ['Lessons', 'Tafsir from trusted scholars'], '#/lessons', 'lessons', '#ebe6f8', '#5b45b0'),
+  f('hifz', ['حفظ القرآن', 'احفظ آية آية وسمّع لنفسك'], ['Memorise', 'Learn verse by verse, then recite'], '#/hifz', 'hifz', '#e6f3e4', '#2f6b2a'),
   f('saved', ['محفوظاتي', 'كل ما حفظته في مكان واحد'], ['Saved', 'Everything you saved, in one place'], '#/saved', 'fav', '#f9e3ea', '#b23a63'),
   f('kahf', ['سورة الكهف', 'لقراءة يوم الجمعة'], ['Surah Al-Kahf', 'For Friday reading'], '#/surah/18', 'kahf', '#e4e8f7', '#34479c'),
   f('search', ['بحث', 'عن سورة أو قارئ'], ['Search', 'Find a surah or reciter'], '#/search', 'search', '#e2f1e7', '#22744a'),

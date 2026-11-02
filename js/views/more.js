@@ -17,7 +17,7 @@ export async function radio(view) {
   view.innerHTML = `<label class="search">${ICON.search}<input id="rq" type="search" placeholder="${t('radio.search')}" autocomplete="off"></label>
     <div class="list" id="radios">${'<div class="skeleton"></div>'.repeat(8)}</div>`;
   const radios = await loadRadios();
-  const queue = radios.map((r) => ({ title: r.name, sub: t('player.live'), url: r.url, live: true }));
+  const queue = radios.map((r) => ({ title: r.name, sub: t('player.live'), url: r.url, live: true, fav: { type: 'radio', ref: String(r.id), title: r.name, subtitle: t('player.live') } }));
   $('#radios').innerHTML = radios.map((r, i) => `
     <button class="row" data-i="${i}" data-play="${esc(r.url)}" data-k="${norm(r.name)}">
       <span class="disc">${ICON.radio}</span><span class="meta"><b>${esc(r.name)}</b></span><span class="live">${t('radio.live')}</span></button>`).join('');
@@ -124,10 +124,12 @@ export async function scholarView(view, { args: [id], setTitle }) {
   const queueFrom = async (from, count) => {
     const chosen = lessons.slice(from, from + count);
     const parts = await Promise.all(chosen.map((l) => getLessonParts(l).catch(() => [])));
+    const fav = { type: 'scholar', ref: String(scholar.id), title: scholar.name, subtitle: scholar.topic };
     return chosen.flatMap((lesson, i) => parts[i].map((p, n) => ({
       title: parts[i].length > 1 ? `${lesson.title} (${num(n + 1)})` : lesson.title,
       sub,
       url: p.url,
+      fav,
     })));
   };
 
@@ -150,6 +152,8 @@ export async function scholarView(view, { args: [id], setTitle }) {
 
 const SAVED_GROUPS = [
   ['reciter', 'saved.reciters', (i) => `#/reciter/${i.ref}`],
+  ['scholar', 'saved.scholars', (i) => `#/scholar/${i.ref}`],
+  ['radio', 'saved.radios', null], // plays right here
   ['surah', 'saved.surahs', (i) => `#/surah/${i.ref}`],
   ['ayah', 'saved.ayahs', (i) => `#/surah/${i.ref.replace(':', '/')}`],
 ];
@@ -169,14 +173,22 @@ export async function savedView(view) {
       if (!group.length) return '';
       return `<h2 class="section">${t(label)}</h2><div class="list">${group.map((item) => {
         const title = item.title || reciters.find((r) => String(r.id) === item.ref)?.name || t('saved.reciters');
-        return `<div class="row"><a class="meta" href="${href(item)}"><b>${esc(title)}</b>${item.subtitle ? `<small>${esc(item.subtitle)}</small>` : ''}</a>
+        const text = `<b>${esc(title)}</b>${item.subtitle ? `<small>${esc(item.subtitle)}</small>` : ''}`;
+        const open = href ? `<a class="meta" href="${href(item)}">${text}</a>` : `<button class="meta" data-radio="${esc(item.ref)}">${text}</button>`;
+        return `<div class="row">${open}
           <button class="icon-btn small" data-type="${type}" data-ref="${esc(item.ref)}" aria-label="${t('common.remove')}">${ICON.close}</button></div>`;
       }).join('')}</div>`;
     }).join('');
   };
   draw();
   loadReciters().then(draw).catch(() => {});
-  root.onclick = (e) => {
+  root.onclick = async (e) => {
+    const radioBtn = e.target.closest('[data-radio]');
+    if (radioBtn) {
+      const station = (await loadRadios()).find((r) => String(r.id) === radioBtn.dataset.radio);
+      if (station) player.play([{ title: station.name, sub: t('player.live'), url: station.url, live: true, fav: { type: 'radio', ref: String(station.id), title: station.name, subtitle: t('player.live') } }]);
+      return;
+    }
     const btn = e.target.closest('[data-type]');
     if (!btn) return;
     saved.toggle({ type: btn.dataset.type, ref: btn.dataset.ref });
@@ -197,8 +209,29 @@ export async function accountView(view) {
           <small>${plusUntil ? esc(t('account.plusActive', { date: new Date(plusUntil).toLocaleDateString(i18n.lang === 'ar' ? 'ar-EG' : i18n.lang) })) : t('plus.subtitle')}</small></span></a>
       </div>
       <p class="muted small">${t('account.synced')}</p>
-      <button class="pill wide" id="logout">${t('account.logout')}</button>`;
+      <button class="pill wide" id="logout">${t('account.logout')}</button>
+      <details class="danger-zone">
+        <summary>${t('account.delete')}</summary>
+        <p class="muted small">${t('account.deleteHint')}</p>
+        <form class="form" id="deleteForm">
+          <label>${t('account.password')}<input name="password" type="password" autocomplete="current-password" dir="ltr" required></label>
+          <p class="form-error" id="deleteError" role="alert" hidden></p>
+          <button class="pill wide danger">${t('account.deleteConfirm')}</button>
+        </form>
+      </details>
+      <p class="center small"><a class="link-inline" href="privacy.html">${t('account.privacy')}</a></p>`;
     $('#logout').onclick = async () => { await account.logout(); toast(t('account.loggedOut')); location.hash = '#/home'; };
+    $('#deleteForm').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await account.deleteAccount(new FormData(e.target).get('password'));
+        toast(t('account.deleted'));
+        location.hash = '#/home';
+      } catch (err) {
+        $('#deleteError').textContent = err.body?.errors?.password?.[0] || t('error.generic');
+        $('#deleteError').hidden = false;
+      }
+    };
     return;
   }
 
@@ -215,7 +248,8 @@ export async function accountView(view) {
         <button class="pill primary wide">${t(login ? 'account.login' : 'account.register')}</button>
       </form>
       <button class="link" id="switchMode">${t(login ? 'account.toRegister' : 'account.toLogin')}</button>
-      <p class="muted small center">${t('account.optional')}</p>`;
+      <p class="muted small center">${t('account.optional')}</p>
+      <p class="center small"><a class="link-inline" href="privacy.html">${t('account.privacy')}</a></p>`;
 
     $('#switchMode').onclick = () => { mode = login ? 'register' : 'login'; draw(); };
     $('#authForm').onsubmit = async (e) => {

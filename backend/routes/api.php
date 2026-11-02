@@ -19,6 +19,7 @@ Route::post('webhooks/paymob', PaymobWebhookController::class)->middleware('thro
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::delete('me', [AuthController::class, 'destroy'])->middleware('throttle:5,1');
 
     Route::get('saved', [SavedItemController::class, 'index']);
     Route::post('saved', [SavedItemController::class, 'store']);

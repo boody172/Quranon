@@ -16,6 +16,7 @@ class FeatureSeeder extends Seeder
             ['mushaf', ['المصحف', 'اقرأ بالرسم العثماني'], ['Mushaf', 'Read in the Uthmani script'], '#/mushaf', 'mushaf', '#f6ecd6', '#8c6118'],
             ['radio', ['الإذاعات', 'بث مباشر طوال اليوم'], ['Radio', 'Live, all day long'], '#/radio', 'radio', '#fbe6dc', '#b4501f'],
             ['lessons', ['دروس', 'تفسير وتدبّر من علماء موثوقين'], ['Lessons', 'Tafsir from trusted scholars'], '#/lessons', 'lessons', '#ebe6f8', '#5b45b0'],
+            ['hifz', ['حفظ القرآن', 'احفظ آية آية وسمّع لنفسك'], ['Memorise', 'Learn verse by verse, then recite'], '#/hifz', 'hifz', '#e6f3e4', '#2f6b2a'],
             ['saved', ['محفوظاتي', 'كل ما حفظته في مكان واحد'], ['Saved', 'Everything you saved, in one place'], '#/saved', 'fav', '#f9e3ea', '#b23a63'],
             ['kahf', ['سورة الكهف', 'لقراءة يوم الجمعة'], ['Surah Al-Kahf', 'For Friday reading'], '#/surah/18', 'kahf', '#e4e8f7', '#34479c'],
             ['search', ['بحث', 'عن سورة أو قارئ'], ['Search', 'Find a surah or reciter'], '#/search', 'search', '#e2f1e7', '#22744a'],

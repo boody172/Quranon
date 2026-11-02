@@ -20,6 +20,12 @@ class ScholarSeeder extends Seeder
             [['الشيخ صالح المغامسي', 'محاضرات ودروس'], ['Sheikh Saleh Al-Maghamsi', 'Lectures and lessons'], 'sa', false, 'archive', 'Dourous-saleh-mghamsi-upByMuslem'],
             [['الشيخ عثمان الخميس', 'قصص الأنبياء'], ['Sheikh Othman Al-Khamees', 'Stories of the Prophets'], 'kw', false, 'archive', 'Prophets_stories-othman_khamis_up_by_muslem'],
             [['د. محمد راتب النابلسي', 'تفسير القرآن الكريم'], ['Dr. Mohammed Rateb Al-Nabulsi', 'Tafsir of the Quran'], 'sy', false, 'archive', 'Tasfeer-Nabulsi'],
+            [['الشيخ عبد الرحمن السديس', 'خطب ودروس الحرم المكي'], ['Sheikh Abdul-Rahman Al-Sudais', 'Sermons from Masjid al-Haram'], 'sa', false, 'islamhouse', '8474'],
+            [['الشيخ سعود الشريم', 'خطب ودروس الحرم المكي'], ['Sheikh Saud Al-Shuraim', 'Sermons from Masjid al-Haram'], 'sa', false, 'islamhouse', '8603'],
+            [['الشيخ علي الحذيفي', 'خطب المسجد النبوي'], ['Sheikh Ali Al-Hudhaify', 'Sermons from the Prophet’s Mosque'], 'sa', false, 'islamhouse', '56685'],
+            [['الشيخ صلاح البدير', 'خطب المسجد النبوي'], ['Sheikh Salah Al-Budair', 'Sermons from the Prophet’s Mosque'], 'sa', false, 'islamhouse', '56690'],
+            [['الشيخ عبد الباري الثبيتي', 'خطب المسجد النبوي'], ['Sheikh Abdul-Bari Al-Thubaiti', 'Sermons from the Prophet’s Mosque'], 'sa', false, 'islamhouse', '8602'],
+            [['الشيخ عبد المحسن القاسم', 'خطب المسجد النبوي'], ['Sheikh Abdul-Muhsin Al-Qasim', 'Sermons from the Prophet’s Mosque'], 'sa', false, 'islamhouse', '8316'],
         ];
 
         foreach ($scholars as $i => [$ar, $en, $country, $late, $source, $ref]) {

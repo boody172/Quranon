@@ -9,4 +9,5 @@ enum SavedItemType: string
     case Ayah = 'ayah';
     case Radio = 'radio';
     case Lesson = 'lesson';
+    case Scholar = 'scholar';
 }

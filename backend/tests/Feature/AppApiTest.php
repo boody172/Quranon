@@ -95,4 +95,18 @@ class AppApiTest extends TestCase
     {
         $this->getJson('/api/saved')->assertUnauthorized();
     }
+
+    public function test_user_can_delete_their_account(): void
+    {
+        $user = User::factory()->create(['password' => 'secret-pass']);
+        $user->savedItems()->create(['type' => 'surah', 'ref' => '1', 'title' => 'x']);
+        $token = $user->createToken('app')->plainTextToken;
+
+        $this->withToken($token)->deleteJson('/api/me', ['password' => 'wrong'])->assertJsonValidationErrors('password');
+        $this->withToken($token)->deleteJson('/api/me', ['password' => 'secret-pass'])->assertNoContent();
+
+        $this->assertModelMissing($user);
+        $this->assertDatabaseCount('saved_items', 0);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
 }

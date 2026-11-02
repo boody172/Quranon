@@ -45,7 +45,10 @@ export async function plus(view, { args: [outcome] }) {
   const config = await appConfig();
   const plans = config?.plans?.length ? config.plans : DEFAULT_PLANS;
   // With a backend, show only methods whose payment keys are configured; the preview shows the full list.
-  const methods = config ? config.payment_methods || [] : DEFAULT_METHODS;
+  // Store rules: inside the iOS/Android apps a digital subscription must go through Apple/Google billing,
+  // so the web payment methods are only offered on the website.
+  const inStoreApp = Boolean(window.Capacitor?.isNativePlatform?.());
+  const methods = inStoreApp ? [] : config ? config.payment_methods || [] : DEFAULT_METHODS;
   const perks = config?.plus_perks ? pick(config.plus_perks) : DEFAULT_PERKS[i18n.lang] || DEFAULT_PERKS.en;
   const country = detectCountry();
 
@@ -98,7 +101,7 @@ export async function plus(view, { args: [outcome] }) {
           <span class="pm pm-${esc(m.code)}" aria-hidden="true"></span>${esc(pick(m.name))}
         </button>`).join('')}</div>
 
-      ${methodList.length ? '' : `<p class="empty">${t('plus.unavailable')}</p>`}
+      ${methodList.length ? '' : `<p class="empty">${t(inStoreApp ? 'plus.storeSoon' : 'plus.unavailable')}</p>`}
       <div id="checkoutResult"></div>
       <button class="pill primary wide" id="pay"${methodList.length ? '' : ' disabled'}>${esc(t('plus.pay', { price: price(plan.prices[state.currency], state.currency) }))}</button>`;
 
