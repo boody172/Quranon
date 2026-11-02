@@ -483,7 +483,8 @@ input[type=range] { width: 100%; margin-top: 20px; accent-color: var(--accent); 
 .sleep-panel .chip { background: #fff; }
 .sleep-panel .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 #pSleep .badge { bottom: 3px; font-size: 10px; }
-#miniSleep { color: var(--accent); width: 34px; }
+#miniSleep { color: var(--text-2); width: 34px; }
+#miniSleep.on { color: var(--accent); }
 #miniSleep svg { width: 18px; height: 18px; }
 .nudge {
   position: fixed; z-index: 31; inset-inline: 16px; bottom: calc(92px + env(safe-area-inset-bottom)); max-width: 680px; margin: 0 auto;

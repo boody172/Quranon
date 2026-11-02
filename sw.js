@@ -2,7 +2,7 @@
 // App files are precached per release and served straight from the cache (no network wait on open).
 // A new release = a new VERSION here: the browser sees the changed sw.js, precaches the new files,
 // and open pages reload once onto them. Catalogue APIs: stale-while-revalidate. Audio is never touched.
-const VERSION = 'v22';
+const VERSION = 'v23';
 const SHELL = `qn-shell-${VERSION}`;
 const DATA = 'qn-data-v1';
 const SHELL_FILES = [

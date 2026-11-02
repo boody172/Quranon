@@ -186,7 +186,7 @@ function renderSleep() {
   btn.classList.toggle('on', Boolean(mode));
   btn.querySelector('.badge')?.remove();
   if (mode) btn.insertAdjacentHTML('beforeend', `<b class="badge">${mode === 'time' ? num(sleep.minutesLeft) : '⏹'}</b>`);
-  $('#miniSleep').hidden = !mode;
+  $('#miniSleep').classList.toggle('on', Boolean(mode)); // always visible: easy to find before sleeping
   const panel = $('#sleepPanel');
   if (panel.hidden) return;
   const live = Boolean(current()?.live);
