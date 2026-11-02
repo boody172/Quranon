@@ -11,6 +11,8 @@ import { mushaf, surah } from './views/mushaf.js';
 import { accountView, lessons, qiblaView, radio, savedView, scholarView, search } from './views/more.js';
 import { hifz } from './views/hifz.js';
 import { plus } from './views/plus.js';
+import { circle, circles } from './views/circles.js';
+import { initCarPlay, refreshCarPlay } from './carplay.js';
 
 const ROUTES = {
   home: { view: home },
@@ -27,6 +29,8 @@ const ROUTES = {
   account: { view: accountView, title: 'page.account' },
   plus: { view: plus, title: 'page.plus' },
   hifz: { view: hifz, title: 'page.hifz' },
+  circles: { view: circles, title: 'page.circles', parent: '#/hifz' },
+  circle: { view: circle, parent: '#/circles' },
 };
 
 const view = $('#view');
@@ -84,6 +88,7 @@ async function switchLanguage(code) {
   resetCatalog();
   renderLangButton();
   route();
+  refreshCarPlay();
 }
 
 $('#langBtn').onclick = () => {
@@ -149,6 +154,7 @@ renderLangButton();
 addEventListener('hashchange', route);
 route();
 checkRelease(config);
+initCarPlay();
 
 // Content published while the app was open still reaches the user on their next screen.
 (window.requestIdleCallback || ((fn) => setTimeout(fn, 1200)))(async () => {

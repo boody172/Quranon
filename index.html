@@ -45,6 +45,7 @@
       <div class="disc"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
       <div class="mini-text"><b id="miniTitle"></b><small id="miniSub"></small></div>
     </button>
+    <button class="icon-btn fav" id="miniSleep" data-i18n-label="player.sleep" hidden><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
     <button class="icon-btn fav" id="miniFav" data-i18n-label="player.favorite" hidden></button>
     <button class="icon-btn play" id="miniPlay" data-i18n-label="player.playPause"></button>
     <div class="mini-progress"><i id="miniBar"></i></div>
@@ -66,6 +67,10 @@
         <button class="icon-btn lg" id="pNext" data-i18n-label="player.next"><svg viewBox="0 0 24 24"><path d="M18 5v14M6 5l9 7-9 7z"/></svg></button>
         <button class="icon-btn" id="pSleep" data-i18n-label="player.sleep"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
       </div>
+      <div class="sleep-panel" id="sleepPanel" hidden>
+        <div class="sleep-head"><b data-i18n-text="player.sleep"></b><small id="sleepState"></small></div>
+        <div class="chips" id="sleepChips"></div>
+      </div>
       <div class="sheet-actions">
         <button class="pill soft fav-pill" id="pFav" hidden></button>
         <button class="pill soft" id="pRead" data-i18n-text="player.read"></button>
@@ -73,6 +78,11 @@
     </div>
   </section>
 
+  <div class="nudge" id="nudge" role="status" hidden>
+    <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+    <span></span><button class="pill primary" data-act></button>
+    <button class="icon-btn small" data-close data-i18n-label="common.close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
   <div class="toast" id="toast" role="status"></div>
   <audio id="audio" preload="none" playsinline></audio>
 

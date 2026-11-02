@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Feature;
 use App\Models\Reciter;
 use App\Models\User;
+use App\Services\AppConfig;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -24,6 +25,19 @@ class AppApiTest extends TestCase
         $this->assertSame('qibla', $response->json('features.0.slug'));
         $this->assertNotContains('search', collect($response->json('features'))->pluck('slug'));
         $this->assertNotEmpty($response->json('scholars'));
+    }
+
+    public function test_cached_config_is_served_intact_on_later_requests(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        config(['cache.default' => 'file']);
+        AppConfig::flush();
+
+        $first = $this->getJson('/api/config')->assertOk()->json();
+        $second = $this->getJson('/api/config')->assertOk()->json();
+
+        $this->assertSame($first, $second);
+        $this->assertSame('qibla', $second['features'][0]['slug']);
     }
 
     public function test_config_cache_is_refreshed_when_content_changes(): void

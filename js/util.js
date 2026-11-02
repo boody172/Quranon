@@ -72,6 +72,9 @@ document.addEventListener('error', (e) => {
 
 const svg = (d, extra = '') => `<svg viewBox="0 0 24 24" aria-hidden="true"${extra}>${d}</svg>`;
 export const ICON = {
+  users: svg('<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14c2.5.2 4 1.8 4.5 4.5"/>'),
+  plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  share: svg('<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v7h14v-7"/>'),
   play: svg('<path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/>'),
   pause: svg('<path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z" fill="currentColor" stroke="none"/>'),
   heart: svg('<path d="M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z"/>'),

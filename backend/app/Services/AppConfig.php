@@ -18,11 +18,12 @@ use Illuminate\Support\Facades\Cache;
  */
 class AppConfig
 {
-    private const CACHE_KEY = 'app-config:v2';
+    // Stored as plain arrays: the cache refuses to unserialize objects (cache.serializable_classes = false).
+    private const CACHE_KEY = 'app-config:v3';
 
     public static function get(): array
     {
-        return Cache::rememberForever(self::CACHE_KEY, fn () => [
+        return Cache::rememberForever(self::CACHE_KEY, fn () => collect([
             'features' => Feature::where('is_active', true)->ordered()->get()->map->toAppArray()->values(),
             'reciters' => Reciter::ordered()->get()->map->toAppArray()->values(),
             'scholars' => Scholar::where('is_active', true)->ordered()->get()->map->toAppArray()->values(),
@@ -34,7 +35,7 @@ class AppConfig
                 ->filter(fn (PaymentMethod $m) => $m->isReady(app(GatewayManager::class)))
                 ->map->toAppArray()->values(),
             'plus_perks' => Setting::get('plus_perks'),
-        ]);
+        ])->toArray());
     }
 
     public static function flush(): void
@@ -47,10 +48,12 @@ class AppConfig
         $languages = Language::active()->with('translations')->get();
 
         return [
-            'languages' => $languages->map(fn (Language $l) => ['code' => $l->code, 'name' => $l->name, 'dir' => $l->dir])->values(),
+            'languages' => $languages->map(fn (Language $l) => ['code' => $l->code, 'name' => $l->name, 'dir' => $l->dir])->values()->all(),
             'strings' => $languages
                 ->mapWithKeys(fn (Language $l) => [$l->code => $l->translations->pluck('value', 'key')])
-                ->filter(fn ($strings) => $strings->isNotEmpty()),
+                ->filter(fn ($strings) => $strings->isNotEmpty())
+                ->map(fn ($strings) => $strings->all())
+                ->all(),
         ];
     }
 }

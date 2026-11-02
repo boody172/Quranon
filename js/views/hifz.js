@@ -27,6 +27,7 @@ function setMemorised(surah, ayah, value) {
   const set = memorised(surah);
   value ? set.add(ayah) : set.delete(ayah);
   store.set(progressKey(surah), [...set].sort((a, b) => a - b));
+  dispatchEvent(new CustomEvent('hifz:progress', { detail: { surah, ayah, value } })); // circles listen
 }
 
 // ---------- recitation check ----------
@@ -62,8 +63,9 @@ function compare(expected, heard) {
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 // ---------- screens ----------
-export async function hifz(view, { onCleanup }) {
-  const saved = store.get('hifz:setup', { surah: 1, from: 1, to: 7, reciter: 'ar.husary', repeat: 3, rounds: 1 });
+export async function hifz(view, { args: [action], onCleanup }) {
+  const saved = { surah: 1, from: 1, to: 7, reciter: 'ar.husary', repeat: 3, rounds: 1, ...store.get('hifz:setup', {}) };
+  if (action === 'start') { session(view, saved, onCleanup); return; } // opened from a circle's daily portion
 
   const surahOptions = SURAHS.map((s) => {
     const done = memorised(s.n).size;
@@ -72,6 +74,8 @@ export async function hifz(view, { onCleanup }) {
 
   view.innerHTML = `
     <section class="hello"><p>${t('hifz.kicker')}</p><h1>${t('hifz.title')}</h1></section>
+    <a class="circle-entry" href="#/circles"><span class="disc">${ICON.users}</span>
+      <span class="meta"><b>${t('circle.title')}</b><small>${t('circle.entry')}</small></span>${ICON.arrow}</a>
     <form class="form hifz-setup" id="setup">
       <label>${t('hifz.surah')}<select class="select" name="surah">${surahOptions}</select></label>
       <div class="two">

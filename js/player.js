@@ -1,19 +1,17 @@
 // Audio player: queue, mini bar, full sheet, lock-screen controls, sleep timer, resume.
 import { saved } from './account.js';
 import { recordKhatma, surahName } from './catalog.js';
-import { t } from './i18n.js';
-import { $, $$, formatTime, ICON, store, toast } from './util.js';
+import { num, t } from './i18n.js';
+import { sleep } from './sleep.js';
+import { $, $$, esc, formatTime, ICON, store, toast } from './util.js';
 
 const audio = $('#audio');
 const sheet = $('#playerSheet');
-const SLEEP_STEPS = [0, 15, 30, 60];
 
 const state = {
   queue: [],
   index: 0,
   repeat: store.get('repeat', 'off'), // off | all | one
-  sleepMinutes: 0,
-  sleepTimer: null,
   seeking: false,
   refill: null, // endless mode: returns more items when the queue is about to run out
 };
@@ -46,6 +44,8 @@ export const player = {
     render();
     mediaSession(item);
     markPlaying();
+    sleep.suggest();
+    renderSleep();
   },
 
   resume() {
@@ -120,19 +120,34 @@ function toggleFavorite() {
   renderFavorite(current());
 }
 
+// Lock screen, headphones, car (CarPlay "Now Playing" / Android Auto) and smart watches.
+const ARTWORK = [96, 128, 192, 256, 512].map((n) => ({ src: new URL(`icons/icon-${n}.webp`, location.href).href, sizes: `${n}x${n}`, type: 'image/webp' }));
+
 function mediaSession(item) {
   if (!('mediaSession' in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({
-    title: item.title, artist: item.sub, album: 'Quranon',
-    artwork: [{ src: 'icons/icon.svg', sizes: '512x512', type: 'image/svg+xml' }],
+    title: item.title, artist: item.sub, album: item.surah ? t('app.name') + ' — ' + t('page.listen') : t('app.name'),
+    artwork: ARTWORK,
   });
+  const skip = (delta) => { if (!current()?.live && audio.duration) audio.currentTime = Math.min(audio.duration, Math.max(0, audio.currentTime + delta)); };
   const handlers = {
-    play: () => audio.play(), pause: () => audio.pause(),
+    play: () => audio.play(), pause: () => audio.pause(), stop: () => audio.pause(),
     previoustrack: () => player.prev(), nexttrack: () => player.next(),
+    seekbackward: (d) => skip(-(d?.seekOffset || 15)),
+    seekforward: (d) => skip(d?.seekOffset || 15),
+    seekto: item.live ? null : (d) => { if (audio.duration) audio.currentTime = d.seekTime; },
   };
   for (const [action, fn] of Object.entries(handlers)) {
     try { navigator.mediaSession.setActionHandler(action, fn); } catch { /* unsupported action */ }
   }
+}
+
+let lastPosition = 0;
+function positionState() {
+  if (!navigator.mediaSession?.setPositionState || current()?.live || !audio.duration || !isFinite(audio.duration)) return;
+  if (Date.now() - lastPosition < 4000) return;
+  lastPosition = Date.now();
+  try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: Math.min(audio.currentTime, audio.duration), playbackRate: audio.playbackRate }); } catch { /* ignore */ }
 }
 
 function openSheet() {
@@ -140,18 +155,53 @@ function openSheet() {
   sheet.setAttribute('aria-hidden', 'false');
 }
 
-function cycleSleepTimer() {
-  state.sleepMinutes = SLEEP_STEPS[(SLEEP_STEPS.indexOf(state.sleepMinutes) + 1) % SLEEP_STEPS.length];
-  clearTimeout(state.sleepTimer);
-  $('#pSleep').classList.toggle('on', state.sleepMinutes > 0);
-  if (!state.sleepMinutes) return toast(t('player.sleepOff'));
-  state.sleepTimer = setTimeout(() => {
-    audio.pause();
-    state.sleepMinutes = 0;
-    $('#pSleep').classList.remove('on');
-  }, state.sleepMinutes * 6e4);
-  toast(t('player.sleepIn', { n: state.sleepMinutes }));
+// ---------- sleep timer panel ----------
+function renderSleep() {
+  const mode = sleep.mode;
+  const btn = $('#pSleep');
+  btn.classList.toggle('on', Boolean(mode));
+  btn.querySelector('.badge')?.remove();
+  if (mode) btn.insertAdjacentHTML('beforeend', `<b class="badge">${mode === 'time' ? num(sleep.minutesLeft) : '⏹'}</b>`);
+  $('#miniSleep').hidden = !mode;
+  const panel = $('#sleepPanel');
+  if (panel.hidden) return;
+  const live = Boolean(current()?.live);
+  const chip = (attrs, label, on) => `<button class="chip${on ? ' on' : ''}" ${attrs}>${esc(label)}</button>`;
+  $('#sleepChips').innerHTML = [
+    chip('data-sleep="off"', t('sleep.off'), !mode),
+    ...sleep.presets.map((m) => chip(`data-sleep="${m}"`, t('sleep.minutes', { n: num(m) }), false)),
+    live ? '' : chip('data-sleep="track"', t(current()?.surah ? 'sleep.endOfSurah' : 'sleep.endOfTrack'), mode === 'track'),
+  ].join('');
+  $('#sleepState').textContent = mode === 'time' ? t('sleep.left', { n: num(sleep.minutesLeft) })
+    : mode === 'track' ? t('sleep.atEnd') : t('sleep.hint');
 }
+
+function toggleSleepPanel() {
+  const panel = $('#sleepPanel');
+  panel.hidden = !panel.hidden;
+  renderSleep();
+}
+
+$('#sleepChips').onclick = (e) => {
+  const v = e.target.closest('[data-sleep]')?.dataset.sleep;
+  if (!v) return;
+  if (v === 'off') sleep.cancel();
+  else if (v === 'track') sleep.setEndOfTrack();
+  else sleep.setMinutes(Number(v));
+  $('#sleepPanel').hidden = true;
+  renderSleep();
+};
+
+let lastSleepRender = 0;
+sleep.init({
+  live: () => Boolean(current()?.live),
+  changed: () => {
+    // tick() calls this several times a second; the badge only needs a refresh now and then
+    if (Date.now() - lastSleepRender < 1000 && sleep.mode === 'time') return;
+    lastSleepRender = Date.now();
+    renderSleep();
+  },
+});
 
 function cycleRepeat() {
   state.repeat = { off: 'all', all: 'one', one: 'off' }[state.repeat];
@@ -161,10 +211,11 @@ function cycleRepeat() {
 }
 
 // --- wiring ---
-audio.addEventListener('play', render);
-audio.addEventListener('pause', render);
+audio.addEventListener('play', () => { render(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; });
+audio.addEventListener('pause', () => { render(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
 audio.addEventListener('ended', () => {
   if (current()?.khatma) recordKhatma(current(), true);
+  if (sleep.onTrackEnd()) return;
   player.next(true);
 });
 audio.addEventListener('error', () => {
@@ -176,6 +227,8 @@ if (navigator.audioSession) {
   try { navigator.audioSession.type = 'playback'; } catch { /* unsupported */ }
 }
 audio.addEventListener('timeupdate', () => {
+  sleep.tick();
+  positionState();
   const progress = audio.duration ? audio.currentTime / audio.duration : 0;
   $('#miniBar').style.transform = `scaleX(${progress})`;
   if (!state.seeking) $('#seek').value = progress * 1000;
@@ -197,7 +250,8 @@ $('#miniPlay').onclick = $('#pPlay').onclick = () => player.toggle();
 $('#pNext').onclick = () => player.next();
 $('#pPrev').onclick = () => player.prev();
 $('#pRepeat').onclick = cycleRepeat;
-$('#pSleep').onclick = cycleSleepTimer;
+$('#pSleep').onclick = toggleSleepPanel;
+$('#miniSleep').onclick = () => { openSheet(); if ($('#sleepPanel').hidden) toggleSleepPanel(); };
 $('#miniFav').onclick = $('#pFav').onclick = toggleFavorite;
 $('#pRead').onclick = () => { player.closeSheet(); location.hash = '#/surah/' + current().surah; };
 $('#miniOpen').onclick = openSheet;
