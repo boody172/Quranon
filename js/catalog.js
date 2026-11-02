@@ -101,8 +101,8 @@ export async function loadScholars() {
 const LESSON_PAGE = 30;
 const audioFile = /\.(mp3|m4a|ogg)$/i;
 const naturalOrder = (a, b) => a.localeCompare(b, 'ar', { numeric: true });
-// Community collections sometimes bundle a programme's theme song or nasheeds: never play those.
-const notALesson = /(أغني|اغني|أغان|اغان|غناء|نشيد|أنشود|انشود|موسيق|song|music|nasheed)/i;
+// Community collections sometimes bundle theme songs, nasheeds or promos: only real lessons are listed.
+const notALesson = /(أغني|اغني|أغان|اغان|غناء|نشيد|أنشود|انشود|موسيق|تتر|برومو|إعلان|اعلان|song|music|nasheed|promo|trailer)/i;
 const tidyTitle = (text) => text.replace(/[_]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
 async function archiveLessons(identifier) {
