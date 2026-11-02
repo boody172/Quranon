@@ -14,6 +14,7 @@ const state = {
   sleepMinutes: 0,
   sleepTimer: null,
   seeking: false,
+  refill: null, // endless mode: returns more items when the queue is about to run out
 };
 
 const current = () => state.queue[state.index];
@@ -21,10 +22,15 @@ const current = () => state.queue[state.index];
 export const player = {
   get current() { return current(); },
 
-  /** item: { title, sub, url, surah?, live? } */
-  play(queue, index = 0) {
+  /**
+   * item: { title, sub, url, surah?, live? }
+   * options.refill: () => item[] — makes the queue endless (shuffle / radio-style listening).
+   */
+  play(queue, index = 0, { refill = null } = {}) {
+    if (queue !== state.queue) state.refill = refill;
     state.queue = queue;
     state.index = index;
+    if (state.refill && state.queue.length - state.index < 3) state.queue.push(...state.refill());
     const item = current();
     if (!item) return;
     audio.src = item.url;
@@ -33,7 +39,7 @@ export const player = {
       // AbortError just means another tap replaced this track.
       if (err?.name !== 'AbortError') toast(`${t('player.cantPlay')} (${err?.name || 'Error'})`);
     });
-    if (!item.live) store.set('last', { queue, index });
+    if (!item.live) store.set('last', state.refill ? { queue: [item], index: 0 } : { queue, index });
     $('#miniPlayer').hidden = false;
     render();
     mediaSession(item);
@@ -56,6 +62,7 @@ export const player = {
   next(auto = false) {
     if (!state.queue.length) return;
     if (auto && state.repeat === 'one') { audio.currentTime = 0; audio.play(); return; }
+    if (state.refill && state.index >= state.queue.length - 2) state.queue.push(...state.refill());
     if (state.index < state.queue.length - 1) this.play(state.queue, state.index + 1);
     else if (state.repeat === 'all' || !auto) this.play(state.queue, 0);
   },

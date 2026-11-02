@@ -163,5 +163,11 @@
   "lessons.more": "عرض المزيد",
   "lessons.none": "لا توجد دروس لهذا الشيخ بعد.",
   "lessons.unavailable": "تعذّر تحميل الدروس الآن. حاول مرة أخرى.",
-  "lessons.notFound": "لم نجد هذا الشيخ."
+  "lessons.notFound": "لم نجد هذا الشيخ.",
+  "shuffle.title": "استماع عشوائي",
+  "shuffle.subtitle": "قارئ وسورة مختلفة في كل مرة، بلا توقف",
+  "shuffle.start": "ابدأ",
+  "shuffle.fromSaved": "عشوائي من قرّائي المحفوظين فقط",
+  "shuffle.started": "بدأ التشغيل العشوائي",
+  "reciter.shuffle": "تشغيل عشوائي"
 }

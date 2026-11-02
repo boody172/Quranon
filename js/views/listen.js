@@ -1,5 +1,5 @@
 import { saved } from '../account.js';
-import { countryName, featuredReciters, findReciter, loadReciters, reciterLine, surahKey, surahMeta, surahName, surahQueue } from '../catalog.js';
+import { countryName, featuredReciters, findReciter, loadReciters, mixedShuffle, reciterLine, reciterShuffle, surahKey, surahMeta, surahName, surahQueue } from '../catalog.js';
 import { num, t } from '../i18n.js';
 import { markPlaying, player } from '../player.js';
 import { $, $$, avatar, esc, ICON, norm, toast } from '../util.js';
@@ -30,11 +30,30 @@ export async function listen(view, { args: [filter] }) {
     <label class="search">${ICON.search}<input id="q" type="search" placeholder="${t('listen.search')}" value="${esc(filterState.query)}" autocomplete="off"></label>
     <div class="chips" id="filters">${FILTERS.map((id) =>
       `<button class="chip${filterState.id === id ? ' on' : ''}" data-f="${id}" aria-pressed="${filterState.id === id}">${filterLabel(id)}</button>`).join('')}</div>
+    <div class="shuffle-card">
+      <span class="disc">${ICON.shuffle}</span>
+      <span class="meta"><b>${t('shuffle.title')}</b><small>${t('shuffle.subtitle')}</small></span>
+      <button class="pill primary" id="mixAll">${ICON.play} ${t('shuffle.start')}</button>
+    </div>
+    <button class="link small" id="mixSaved" hidden>${t('shuffle.fromSaved')}</button>
     <section id="featured" hidden><h2 class="section">${t('listen.featured')}</h2><div class="hscroll"></div></section>
     <h2 class="section">${t('listen.all')} <small class="muted" id="count"></small></h2>
     <div class="list" id="rlist">${'<div class="skeleton"></div>'.repeat(8)}</div>`;
 
   const list = await loadReciters();
+  const savedReciters = list.filter((r) => saved.has('reciter', r.id));
+  $('#mixSaved').hidden = savedReciters.length < 2;
+  $('#mixAll').onclick = () => {
+    const { queue, refill } = mixedShuffle(list);
+    player.play(queue, 0, { refill });
+    toast(t('shuffle.started'));
+  };
+  $('#mixSaved').onclick = () => {
+    const { queue, refill } = mixedShuffle(list, { pool: savedReciters });
+    player.play(queue, 0, { refill });
+    toast(t('shuffle.started'));
+  };
+
   const draw = () => {
     const q = norm(filterState.query);
     const results = list.filter((r) => matches(r, q));
@@ -80,6 +99,7 @@ export async function reciter(view, { args: [id], setTitle }) {
         <div><h1>${esc(r.name)}</h1><p class="muted">${esc(reciterLine(r))}</p></div></header>
       <div class="actions">
         <button class="pill primary" id="playAll">${ICON.play} ${t('reciter.playAll')}</button>
+        <button class="pill icon shuffle" id="shuffle" aria-label="${t('reciter.shuffle')}" title="${t('reciter.shuffle')}">${ICON.shuffle}</button>
         <button class="pill icon${isSaved ? ' saved' : ''}" id="save" aria-pressed="${isSaved}" aria-label="${t('reciter.save')}">${isSaved ? ICON.heartFilled : ICON.heart}</button>
       </div>
       ${r.moshaf.length > 1
@@ -93,6 +113,11 @@ export async function reciter(view, { args: [id], setTitle }) {
 
     markPlaying();
     $('#playAll').onclick = () => player.play(queue, 0);
+    $('#shuffle').onclick = () => {
+      const mix = reciterShuffle(r, moshaf);
+      player.play(mix.queue, 0, { refill: mix.refill });
+      toast(t('shuffle.started'));
+    };
     $('#save').onclick = () => {
       const now = saved.toggle({ type: 'reciter', ref: r.id, title: r.name, subtitle: reciterLine(r) });
       toast(t(now ? 'toast.saved' : 'toast.removed'));

@@ -83,6 +83,60 @@ export function surahQueue(reciter, moshaf) {
   return surahNumbers(moshaf).map((n) => ({ title: surahTitle(n), sub, url: moshaf.server + pad3(n) + '.mp3', surah: n }));
 }
 
+// ---------- shuffle ----------
+function shuffled(list) {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * Endless shuffle of one reciter: every surah plays once in random order,
+ * then a fresh shuffle starts (never the same surah twice in a row).
+ */
+export function reciterShuffle(reciter, moshaf) {
+  const all = surahQueue(reciter, moshaf);
+  let bag = [];
+  let last = null;
+  const refill = () => {
+    if (!bag.length) {
+      bag = shuffled(all);
+      if (bag.length > 1 && bag[0].url === last) bag.push(bag.shift());
+    }
+    const batch = bag.splice(0, 10);
+    last = batch[batch.length - 1]?.url;
+    return batch;
+  };
+  return { queue: refill(), refill };
+}
+
+/**
+ * Radio-style listening: a different reciter and surah every time.
+ * options.pool narrows the reciters (e.g. only the user's saved ones).
+ */
+export function mixedShuffle(reciters, { pool = null } = {}) {
+  const candidates = (pool?.length ? pool : reciters).filter((r) => r.moshaf?.length);
+  const recent = [];
+  const pickOne = () => {
+    let r;
+    for (let tries = 0; tries < 8; tries++) {
+      r = candidates[Math.floor(Math.random() * candidates.length)];
+      if (!recent.includes(r.id) || candidates.length <= recent.length) break;
+    }
+    recent.push(r.id);
+    if (recent.length > Math.min(5, candidates.length - 1)) recent.shift();
+    const moshaf = r.moshaf[Math.floor(Math.random() * r.moshaf.length)];
+    const surahs = surahNumbers(moshaf);
+    const n = surahs[Math.floor(Math.random() * surahs.length)];
+    return surahQueue(r, moshaf).find((item) => item.surah === n);
+  };
+  const refill = () => Array.from({ length: 10 }, pickOne).filter(Boolean);
+  return { queue: refill(), refill };
+}
+
 // ---------- lessons & radio ----------
 export async function loadScholars() {
   const config = await appConfig();

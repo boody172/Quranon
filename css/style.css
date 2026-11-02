@@ -196,6 +196,15 @@ h2 { font-size: 18px; margin: 0; }
 .rtile b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.4; }
 .rtile small { color: var(--muted); font-size: 12px; }
 
+/* ---------- shuffle ---------- */
+.shuffle-card { display: flex; align-items: center; gap: 14px; padding: 14px 14px 14px 16px; margin-bottom: 6px; border-radius: 20px; background: linear-gradient(150deg, var(--accent-soft), #fff); border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent); }
+.shuffle-card .meta { flex: 1; min-width: 0; }
+.shuffle-card .meta b { display: block; font-weight: 600; }
+.shuffle-card .meta small { color: var(--muted); font-size: 13px; }
+.shuffle-card .pill { height: 46px; padding: 0 18px; flex: none; }
+.pill.icon.shuffle { color: var(--accent); }
+.link.small { font-size: 14px; margin: 4px auto 0; }
+
 /* ---------- inputs ---------- */
 .search {
   display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; margin: 4px 0 14px;

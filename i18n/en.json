@@ -163,5 +163,11 @@
   "lessons.more": "Show more",
   "lessons.none": "No lessons for this scholar yet.",
   "lessons.unavailable": "Couldn't load the lessons right now. Please try again.",
-  "lessons.notFound": "We couldn't find this scholar."
+  "lessons.notFound": "We couldn't find this scholar.",
+  "shuffle.title": "Shuffle",
+  "shuffle.subtitle": "A different reciter and surah every time, nonstop",
+  "shuffle.start": "Start",
+  "shuffle.fromSaved": "Shuffle only my saved reciters",
+  "shuffle.started": "Shuffle is on",
+  "reciter.shuffle": "Shuffle"
 }
