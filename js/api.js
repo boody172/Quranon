@@ -2,7 +2,6 @@
 // so a screen the user has seen once opens instantly afterwards.
 import { CONFIG } from './config.js';
 import { SURAHS } from './data.js';
-import { store } from './util.js';
 
 const SURAH_AYAHS = SURAHS.map((s) => s.ayahs);
 
@@ -40,20 +39,48 @@ async function fetchJSON(url, options) {
   return res.status === 204 ? null : res.json();
 }
 
+// Persistent cache in IndexedDB: large catalogue responses (reciter lists, surah texts) used to live in
+// localStorage, whose synchronous reads/writes froze the screen and whose 5 MB quota filled up.
+const idb = (() => {
+  let opening = null;
+  const open = () => (opening ||= new Promise((resolve, reject) => {
+    const req = indexedDB.open('quranon', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('cache');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  }));
+  const run = (mode, fn) => open().then((db) => new Promise((resolve) => {
+    const tx = db.transaction('cache', mode);
+    const req = fn(tx.objectStore('cache'));
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = tx.onabort = () => resolve(undefined);
+  })).catch(() => undefined);
+  return {
+    get: (key) => run('readonly', (s) => s.get(key)),
+    set: (key, value) => run('readwrite', (s) => s.put(value, key)),
+    clear: () => run('readwrite', (s) => s.clear()),
+  };
+})();
+export const clearPersistentCache = () => idb.clear();
+
+// One-time cleanup: free the localStorage space the old cache took (memorisation progress lives there).
+try {
+  for (const k of Object.keys(localStorage)) if (k.startsWith('qn:c:')) localStorage.removeItem(k);
+} catch { /* storage unavailable */ }
+
 /**
  * Cached GET. Fresh cache → returned immediately. Stale cache → returned immediately
  * and refreshed in the background. No cache → network (deduplicated).
  */
-export function cachedJSON(url, { key, maxAgeHours = 24 } = {}) {
+export async function cachedJSON(url, { key, maxAgeHours = 24 } = {}) {
   const cacheKey = 'c:' + (key || url);
-  const hit = memory.get(cacheKey) || store.get(cacheKey);
   const refresh = () => {
     if (!inflight.has(cacheKey)) {
       inflight.set(cacheKey, fetchJSON(url)
         .then((value) => {
           const entry = { t: Date.now(), v: value };
           memory.set(cacheKey, entry);
-          store.set(cacheKey, entry);
+          idb.set(cacheKey, entry); // async, off the critical path
           return value;
         })
         .finally(() => inflight.delete(cacheKey)));
@@ -61,10 +88,14 @@ export function cachedJSON(url, { key, maxAgeHours = 24 } = {}) {
     return inflight.get(cacheKey);
   };
 
+  let hit = memory.get(cacheKey);
+  if (!hit) {
+    hit = await idb.get(cacheKey);
+    if (hit) memory.set(cacheKey, hit);
+  }
   if (hit) {
-    memory.set(cacheKey, hit);
     if (Date.now() - hit.t > maxAgeHours * HOUR) refresh().catch(() => {});
-    return Promise.resolve(hit.v);
+    return hit.v;
   }
   return refresh();
 }

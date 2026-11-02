@@ -1,5 +1,5 @@
 // Entry point: language, router, top bar and release notices. Screens live in js/views/.
-import { appConfig, applySources, surahText } from './api.js';
+import { appConfig, applySources, clearPersistentCache, surahText } from './api.js';
 import { loadReciters, resetCatalog } from './catalog.js';
 import { SURAHS } from './data.js';
 import { i18n, pick, t } from './i18n.js';
@@ -121,6 +121,7 @@ function checkRelease(config) {
   banner.querySelector('button').onclick = async () => {
     store.set('release', release.version);
     clearCachedData();
+    await clearPersistentCache();
     if ('caches' in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
     location.reload();
   };

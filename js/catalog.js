@@ -28,15 +28,20 @@ function tag(arabicName) {
   return { key, country: match ? match[1] : 'other', late: Boolean(match?.[2]) };
 }
 
+// Freely licensed portraits from Wikimedia Commons, matched once by scripts/reciter-photos (id → image URL).
+let photosPromise = null;
+const loadPhotos = () => (photosPromise ||= fetch('data/reciter-photos.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
+
 export async function loadReciters() {
   const lang = audioLang();
   if (cache.has(lang)) return cache.get(lang);
 
   // Arabic names drive country tagging and featured detection; localized names are shown to the user.
-  const [arabic, localized, config] = await Promise.all([
+  const [arabic, localized, config, photos] = await Promise.all([
     fetchReciters('ar'),
     lang === 'ar' ? null : fetchReciters(lang).catch(() => null),
     appConfig(),
+    loadPhotos(),
   ]);
   const shown = new Map((localized?.reciters || []).map((r) => [r.id, r]));
   const profiles = new Map((config?.reciters || []).map((p) => [p.id, p]));
@@ -55,7 +60,7 @@ export async function loadReciters() {
         country: profile?.country || tagged.country,
         late: profile ? profile.late : tagged.late,
         featured: Boolean(profile?.featured),
-        photo: profile?.photo || null,
+        photo: profile?.photo || photos[r.id] || null, // admin photo first, then the bundled Wikimedia one
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, i18n.lang));
@@ -81,7 +86,8 @@ export function reciterLine(r) {
 export function surahQueue(reciter, moshaf) {
   const sub = reciter.name + (reciter.moshaf.length > 1 ? ` — ${moshaf.name}` : '');
   const fav = { type: 'reciter', ref: String(reciter.id), title: reciter.name, subtitle: reciterLine(reciter) };
-  return surahNumbers(moshaf).map((n) => ({ title: surahTitle(n), sub, url: moshaf.server + pad3(n) + '.mp3', surah: n, fav }));
+  const photo = reciter.photo || null;
+  return surahNumbers(moshaf).map((n) => ({ title: surahTitle(n), sub, url: moshaf.server + pad3(n) + '.mp3', surah: n, fav, photo }));
 }
 
 // ---------- shuffle ----------

@@ -56,9 +56,11 @@ export function toast(message) {
 }
 
 /** Avatar: lazy-loaded photo when we have one, initials otherwise (and on load error). */
+const tone = (name) => [...String(name)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 997, 7) % 6;
+
 export function avatar(name, photo, size = 52) {
   const letters = esc(initials(name));
-  if (!photo) return `<span class="avatar" style="--s:${size}px">${letters}</span>`;
+  if (!photo) return `<span class="avatar tone-${tone(name)}" style="--s:${size}px">${letters}</span>`;
   return `<span class="avatar" style="--s:${size}px" data-initials="${letters}"><img src="${esc(photo)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async"></span>`;
 }
 
@@ -66,6 +68,7 @@ export function avatar(name, photo, size = 52) {
 document.addEventListener('error', (e) => {
   const img = e.target;
   if (img.tagName === 'IMG' && img.parentElement?.dataset.initials !== undefined) {
+    img.parentElement.classList.add('tone-' + tone(img.parentElement.dataset.initials));
     img.parentElement.textContent = img.parentElement.dataset.initials;
   }
 }, true);

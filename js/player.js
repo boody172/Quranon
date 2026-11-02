@@ -92,12 +92,35 @@ function render() {
   $('#miniTitle').textContent = $('#pTitle').textContent = item.title;
   $('#miniSub').textContent = $('#pSub').textContent = item.sub;
   $('#artSurah').textContent = item.surah ? surahName(item.surah) : item.live ? t('player.live') : '';
+  renderPhoto(item.photo);
   $('#pRead').hidden = !item.surah;
   renderFavorite(item);
   $('#seek').disabled = Boolean(item.live);
   $('#miniPlay').innerHTML = $('#pPlay').innerHTML = audio.paused ? ICON.play : ICON.pause;
   $('#pRepeat').innerHTML = ICON.repeat + (state.repeat === 'one' ? '<b class="badge">1</b>' : '');
   $('#pRepeat').classList.toggle('on', state.repeat !== 'off');
+}
+
+/** Reciter portrait on the mini player and the full player (falls back to the default artwork). */
+function renderPhoto(photo) {
+  const art = $('#playerSheet .art');
+  const disc = $('#miniPlayer .disc');
+  art.classList.toggle('has-photo', Boolean(photo));
+  disc.classList.toggle('has-photo', Boolean(photo));
+  art.querySelector('img')?.remove();
+  disc.querySelector('img')?.remove();
+  if (!photo) return;
+  const img = (cls) => {
+    const el = new Image();
+    el.src = photo;
+    el.alt = '';
+    el.decoding = 'async';
+    el.className = cls;
+    el.onerror = () => { el.remove(); art.classList.remove('has-photo'); disc.classList.remove('has-photo'); };
+    return el;
+  };
+  art.prepend(img('art-photo'));
+  disc.prepend(img('disc-photo'));
 }
 
 /** Heart for whatever is playing: the reciter, the radio station or the scholar. */
@@ -127,7 +150,7 @@ function mediaSession(item) {
   if (!('mediaSession' in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({
     title: item.title, artist: item.sub, album: item.surah ? t('app.name') + ' — ' + t('page.listen') : t('app.name'),
-    artwork: ARTWORK,
+    artwork: item.photo ? [{ src: item.photo, sizes: '256x256', type: 'image/jpeg' }, ...ARTWORK] : ARTWORK,
   });
   const skip = (delta) => { if (!current()?.live && audio.duration) audio.currentTime = Math.min(audio.duration, Math.max(0, audio.currentTime + delta)); };
   const handlers = {
@@ -143,6 +166,7 @@ function mediaSession(item) {
 }
 
 let lastPosition = 0;
+let lastPosSave = 0;
 function positionState() {
   if (!navigator.mediaSession?.setPositionState || current()?.live || !audio.duration || !isFinite(audio.duration)) return;
   if (Date.now() - lastPosition < 4000) return;
@@ -234,7 +258,8 @@ audio.addEventListener('timeupdate', () => {
   if (!state.seeking) $('#seek').value = progress * 1000;
   $('#tCur').textContent = formatTime(audio.currentTime);
   $('#tDur').textContent = current()?.live ? t('player.liveShort') : formatTime(audio.duration);
-  if (current() && !current().live && Math.floor(audio.currentTime) % 5 === 0) store.set('lastPos', audio.currentTime);
+  // Resume point: saved every ~5 s (timeupdate fires several times a second).
+  if (current() && !current().live && Date.now() - lastPosSave > 5000) { lastPosSave = Date.now(); store.set('lastPos', audio.currentTime); }
 });
 
 $('#seek').addEventListener('input', (e) => {

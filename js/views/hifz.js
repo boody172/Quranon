@@ -18,6 +18,14 @@ const REPEATS = [1, 3, 5, 7, 10];
 const ROUNDS = [1, 2, 3, 0]; // 0 = until stopped
 const AYAH_OFFSETS = SURAHS.reduce((acc, s, i) => [...acc, acc[i] + s.ayahs], [0]);
 
+// Warm the browser cache for upcoming verses so each one starts instantly (the CDN caches for 70 days).
+const prefetched = new Set();
+function prefetchAudio(url) {
+  if (prefetched.has(url) || navigator.connection?.saveData) return;
+  prefetched.add(url);
+  fetch(url, { mode: 'no-cors', priority: 'low' }).catch(() => prefetched.delete(url));
+}
+
 const audioUrl = (edition, surah, ayah) => `https://cdn.islamic.network/quran/audio/128/${edition}/${AYAH_OFFSETS[surah - 1] + ayah}.mp3`;
 
 // ---------- memorised verses (per surah) ----------
@@ -63,7 +71,7 @@ function compare(expected, heard) {
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 // ---------- screens ----------
-export async function hifz(view, { args: [action], onCleanup }) {
+export async function hifz(view, { args: [action] = [], onCleanup }) {
   const saved = { surah: 1, from: 1, to: 7, reciter: 'ar.husary', repeat: 3, rounds: 1, ...store.get('hifz:setup', {}) };
   if (action === 'start') { session(view, saved, onCleanup); return; } // opened from a circle's daily portion
 
@@ -99,7 +107,11 @@ export async function hifz(view, { args: [action], onCleanup }) {
     $('#rangeProgress').textContent = t('hifz.memorisedCount', { n: done, total });
   };
   fillAyahs(saved.from, saved.to);
-  form.surah.onchange = () => fillAyahs(1, Math.min(7, SURAHS[form.surah.value - 1].ayahs));
+  surahText(+form.surah.value).catch(() => {}); // warm up so "start" opens instantly
+  form.surah.onchange = () => {
+    fillAyahs(1, Math.min(7, SURAHS[form.surah.value - 1].ayahs));
+    surahText(+form.surah.value).catch(() => {});
+  };
   form.from.onchange = () => { if (+form.to.value < +form.from.value) form.to.value = form.from.value; };
   form.to.onchange = () => { if (+form.to.value < +form.from.value) form.from.value = form.to.value; };
   $$('.segmented', form).forEach((group) => group.addEventListener('click', (e) => {
@@ -171,6 +183,11 @@ async function session(view, setup, onCleanup) {
   function load() {
     audio.src = audioUrl(setup.reciter, setup.surah, verse().number);
     renderVerse();
+    // the next two verses (or the first ones again when a round wraps around)
+    for (const i of [state.index + 1, state.index + 2]) {
+      const v = verses[i % verses.length];
+      if (v) prefetchAudio(audioUrl(setup.reciter, setup.surah, v.number));
+    }
   }
 
   function play() {
