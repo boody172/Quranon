@@ -33,7 +33,7 @@ export const RECITER_TAGS = [
 
 // القراء المميزين في الصفحة الرئيسية (عمالقة دولة التلاوة)
 // Full normalised names (no spaces) so namesakes are never confused (e.g. Yasser vs Ibrahim Al-Dossary).
-export const FEATURED_KEYS = ['عبدالباسط', 'محمدصديقالمنشاوي', 'محمودخليلالحصري', 'مصطفياسماعيل', 'محمدرفعت', 'محمودعليالبنا', 'الطبلاوي', 'ياسرالدوسري', 'السديس', 'سعودالشريم', 'ماهرالمعيقلي', 'العفاسي', 'سعدالغامدي', 'احمدالعجمي', 'ناصرالقطامي', 'بصفر', 'عبداللهالجهني', 'عليالحذيفي', 'محمدايوب', 'بندربليله'];
+export const FEATURED_KEYS = ['عبدالباسط', 'محمدصديقالمنشاوي', 'محمودخليلالحصري', 'مصطفياسماعيل', 'محمدرفعت', 'محمودعليالبنا', 'الطبلاوي', 'ياسرالدوسري', 'السديس', 'سعودالشريم', 'ماهرالمعيقلي', 'العفاسي', 'سعدالغامدي', 'العجمي', 'ناصرالقطامي', 'بصفر', 'الجهني', 'الحذيفي', 'محمدايوب', 'بندربليله'];
 
 // Default scholars and where their audio lessons come from (the dashboard can change all of this).
 // source: 'islamhouse' → IslamHouse author id · 'archive' → Internet Archive item identifier.
